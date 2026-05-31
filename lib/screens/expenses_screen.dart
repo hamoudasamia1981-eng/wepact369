@@ -6,11 +6,12 @@ import 'add_expense_screen.dart';
 
 class ExpensesScreen extends StatefulWidget {
   const ExpensesScreen({super.key});
+
   @override
-  State<ExpensesScreen> createState() => _ExpensesScreenState();
+  ExpensesScreenState createState() => ExpensesScreenState();
 }
 
-class _ExpensesScreenState extends State<ExpensesScreen> {
+class ExpensesScreenState extends State<ExpensesScreen> {
   static const _monthsFr = [
     'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
     'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
@@ -29,14 +30,24 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     'Autre': Color(0xFFF3F4F6),
   };
 
-  String _selectedFilter = 'Mois';
+  String _selectedFilter = "Aujourd'hui";
+  String _personFilter = 'tous'; // 'mine', 'tous', 'partner'
   DateTime _currentPeriod = DateTime.now();
   String? _firstName;
   String? _partnerFirstName;
   String? _coupleId;
   String _currency = '£';
   String? _currentUid;
+  String? _partnerUid;
   bool _isLoading = true;
+
+  /// Called by MainNavigation via GlobalKey to switch the date filter.
+  void jumpToFilter(String filter) {
+    setState(() {
+      _selectedFilter = filter;
+      _currentPeriod = DateTime.now();
+    });
+  }
 
   @override
   void initState() {
@@ -75,6 +86,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         _firstName = firstName;
         _currency = currency;
         _coupleId = ids.join('_');
+        _partnerUid = partnerId;
         _partnerFirstName =
             partnerDoc.data()?['firstName'] as String? ?? 'Partenaire';
         _isLoading = false;
@@ -193,6 +205,36 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     }
   }
 
+  Widget _personFilterChip({
+    required String initial,
+    required Color color,
+    required String value,
+  }) {
+    final selected = _personFilter == value;
+    return GestureDetector(
+      onTap: () => setState(() => _personFilter = value),
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: selected ? color : color.withAlpha(60),
+          border: selected ? Border.all(color: color, width: 2) : null,
+        ),
+        child: Center(
+          child: Text(
+            initial,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -203,8 +245,6 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       );
     }
 
-    // Single-field query avoids composite index requirement.
-    // Date filtering is done client-side in the StreamBuilder builder.
     final stream = _coupleId != null
         ? FirebaseFirestore.instance
             .collection('expenses')
@@ -216,6 +256,12 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 .where('createdBy', isEqualTo: _currentUid)
                 .snapshots()
             : null;
+
+    final partnerInitial = _partnerFirstName?.isNotEmpty == true
+        ? _partnerFirstName![0].toUpperCase()
+        : '?';
+    final myInitial =
+        _firstName?.isNotEmpty == true ? _firstName![0].toUpperCase() : '?';
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -256,7 +302,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               ],
             ),
           ),
-          // Filter pills
+          // Date filter pills
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -305,6 +351,58 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               }).toList(),
             ),
           ),
+          // Person filter (only when couple is linked)
+          if (_coupleId != null) ...[
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Partner avatar (A = purple)
+                _personFilterChip(
+                  initial: partnerInitial,
+                  color: AppColors.primary,
+                  value: 'partner',
+                ),
+                const SizedBox(width: 10),
+                // Tous (default)
+                GestureDetector(
+                  onTap: () => setState(() => _personFilter = 'tous'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      color: _personFilter == 'tous'
+                          ? AppColors.primary
+                          : AppColors.white,
+                      border: Border.all(
+                        color: _personFilter == 'tous'
+                            ? Colors.transparent
+                            : AppColors.textGrey.withAlpha(100),
+                      ),
+                    ),
+                    child: Text(
+                      'Tous',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: _personFilter == 'tous'
+                            ? Colors.white
+                            : AppColors.textGrey,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                // My avatar (S = orange)
+                _personFilterChip(
+                  initial: myInitial,
+                  color: AppColors.secondary,
+                  value: 'mine',
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 4),
           // Content
           Expanded(
@@ -325,15 +423,27 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                             child: CircularProgressIndicator(
                                 color: AppColors.primary));
                       }
-                      // Filter by selected period client-side
                       final range = _getDateRange();
                       final docs = (snap.data?.docs ?? [])
                           .where((doc) {
-                            final ts = doc.data()['date'] as Timestamp?;
+                            // Date filter
+                            final ts =
+                                doc.data()['date'] as Timestamp?;
                             if (ts == null) return false;
                             final d = ts.toDate();
                             return !d.isBefore(range.start) &&
                                 !d.isAfter(range.end);
+                          })
+                          .where((doc) {
+                            // Person filter
+                            final by = doc.data()['createdBy'] as String?;
+                            if (_personFilter == 'mine') {
+                              return by == _currentUid;
+                            }
+                            if (_personFilter == 'partner') {
+                              return by == _partnerUid;
+                            }
+                            return true;
                           })
                           .toList()
                         ..sort((a, b) {

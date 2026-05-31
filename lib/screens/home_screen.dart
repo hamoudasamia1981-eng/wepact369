@@ -26,8 +26,15 @@ class _ActivityItem {
 
 class HomeScreen extends StatefulWidget {
   final ValueChanged<int>? onTabChange;
+  final void Function(int pactsTab)? onNavigateToPacts;
+  final void Function(String filter)? onNavigateToExpenses;
 
-  const HomeScreen({super.key, this.onTabChange});
+  const HomeScreen({
+    super.key,
+    this.onTabChange,
+    this.onNavigateToPacts,
+    this.onNavigateToExpenses,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -698,30 +705,40 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: _buildStatCard(
-                        iconBgColor: AppColors.orangeLight,
-                        icon: Icons.send,
-                        iconColor: AppColors.secondary,
-                        value: _proposedCount.toString(),
-                        label: 'Pacts proposés',
+                      child: GestureDetector(
+                        onTap: () => widget.onNavigateToPacts?.call(1),
+                        child: _buildStatCard(
+                          iconBgColor: AppColors.orangeLight,
+                          icon: Icons.send,
+                          iconColor: AppColors.secondary,
+                          value: _proposedCount.toString(),
+                          label: 'Pacts proposés',
+                        ),
                       ),
                     ),
                     Expanded(
-                      child: _buildStatCard(
-                        iconBgColor: const Color(0xFFD1FAE5),
-                        icon: Icons.check_circle,
-                        iconColor: AppColors.success,
-                        value: _acceptedCount.toString(),
-                        label: 'Pacts acceptés',
+                      child: GestureDetector(
+                        onTap: () => widget.onNavigateToPacts?.call(0),
+                        child: _buildStatCard(
+                          iconBgColor: const Color(0xFFD1FAE5),
+                          icon: Icons.check_circle,
+                          iconColor: AppColors.success,
+                          value: _acceptedCount.toString(),
+                          label: 'Pacts acceptés',
+                        ),
                       ),
                     ),
                     Expanded(
-                      child: _buildStatCard(
-                        iconBgColor: AppColors.purpleLight,
-                        icon: Icons.calendar_today,
-                        iconColor: AppColors.primary,
-                        value: _currentMonthFr,
-                        label: 'Ce mois-ci',
+                      child: GestureDetector(
+                        onTap: () =>
+                            widget.onNavigateToExpenses?.call('Mois'),
+                        child: _buildStatCard(
+                          iconBgColor: AppColors.purpleLight,
+                          icon: Icons.calendar_today,
+                          iconColor: AppColors.primary,
+                          value: _currentMonthFr,
+                          label: 'Ce mois-ci',
+                        ),
                       ),
                     ),
                   ],

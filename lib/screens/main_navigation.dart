@@ -18,6 +18,10 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
+
+  final _pactsKey = GlobalKey<PactsScreenState>();
+  final _expensesKey = GlobalKey<ExpensesScreenState>();
+
   late final List<Widget> _screens;
 
   @override
@@ -26,12 +30,28 @@ class _MainNavigationState extends State<MainNavigation> {
     _screens = [
       HomeScreen(
         onTabChange: (index) => setState(() => _currentIndex = index),
+        onNavigateToPacts: _goToPactsTab,
+        onNavigateToExpenses: _goToExpensesWithFilter,
       ),
-      const ExpensesScreen(),
-      const PactsScreen(),
+      ExpensesScreen(key: _expensesKey),
+      PactsScreen(key: _pactsKey),
       const CalendarScreen(),
       const ProfileScreen(),
     ];
+  }
+
+  void _goToPactsTab(int tabIndex) {
+    setState(() => _currentIndex = 2);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _pactsKey.currentState?.jumpToTab(tabIndex);
+    });
+  }
+
+  void _goToExpensesWithFilter(String filter) {
+    setState(() => _currentIndex = 1);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _expensesKey.currentState?.jumpToFilter(filter);
+    });
   }
 
   void _showCreationSheet() {
@@ -105,7 +125,8 @@ class _MainNavigationState extends State<MainNavigation> {
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const AddInitiativeScreen()));
+                    MaterialPageRoute(
+                        builder: (_) => const AddInitiativeScreen()));
               },
             ),
             const SizedBox(height: 16),

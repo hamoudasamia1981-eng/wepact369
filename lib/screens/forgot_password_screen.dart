@@ -44,16 +44,28 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final isLoading = context.watch<AppAuthProvider>().isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Reset Password')),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.white,
+        elevation: 0,
+        leading: const BackButton(color: AppColors.textDark),
+        title: const Text(
+          'Mot de passe oublié',
+          style: TextStyle(
+              color: AppColors.textDark, fontWeight: FontWeight.w600),
+        ),
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: _emailSent ? _SuccessView(email: _emailController.text.trim()) : _FormView(
-            formKey: _formKey,
-            emailController: _emailController,
-            isLoading: isLoading,
-            onSubmit: _sendReset,
-          ),
+          child: _emailSent
+              ? _SuccessView(email: _emailController.text.trim())
+              : _FormView(
+                  formKey: _formKey,
+                  emailController: _emailController,
+                  isLoading: isLoading,
+                  onSubmit: _sendReset,
+                ),
         ),
       ),
     );
@@ -81,14 +93,10 @@ class _FormView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: 16),
-          const Icon(
-            Icons.lock_reset,
-            size: 64,
-            color: AppColors.primary,
-          ),
+          const Icon(Icons.lock_reset, size: 64, color: AppColors.primary),
           const SizedBox(height: 24),
           const Text(
-            'Forgot your password?',
+            'Mot de passe oublié ?',
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -98,7 +106,7 @@ class _FormView extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           const Text(
-            "Enter your email and we'll send you a reset link.",
+            'Entrez votre email et nous vous enverrons un lien de réinitialisation.',
             style: TextStyle(color: AppColors.textGrey, fontSize: 15),
             textAlign: TextAlign.center,
           ),
@@ -113,8 +121,8 @@ class _FormView extends StatelessWidget {
               prefixIcon: Icon(Icons.email_outlined),
             ),
             validator: (v) {
-              if (v == null || v.trim().isEmpty) return 'Enter your email';
-              if (!v.contains('@')) return 'Enter a valid email';
+              if (v == null || v.trim().isEmpty) return 'Entrez votre email';
+              if (!v.contains('@')) return 'Email invalide';
               return null;
             },
           ),
@@ -126,11 +134,9 @@ class _FormView extends StatelessWidget {
                     height: 20,
                     width: 20,
                     child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
+                        color: Colors.white, strokeWidth: 2),
                   )
-                : const Text('Send Reset Link'),
+                : const Text('Envoyer le lien'),
           ),
         ],
       ),
@@ -149,10 +155,11 @@ class _SuccessView extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Icon(Icons.mark_email_read_outlined, size: 72, color: AppColors.primary),
+        const Icon(Icons.mark_email_read_outlined,
+            size: 72, color: AppColors.primary),
         const SizedBox(height: 24),
         const Text(
-          'Check your inbox',
+          'Vérifiez votre messagerie',
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
@@ -162,14 +169,14 @@ class _SuccessView extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'A reset link was sent to $email',
+          'Un lien de réinitialisation a été envoyé à $email',
           style: const TextStyle(color: AppColors.textGrey, fontSize: 15),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 40),
         ElevatedButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Back to Login'),
+          child: const Text('Retour à la connexion'),
         ),
       ],
     );

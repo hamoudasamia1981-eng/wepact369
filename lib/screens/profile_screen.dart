@@ -67,26 +67,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final uid = user.uid;
       final ids = [uid, partnerId]..sort();
       final coupleId = ids.join('_');
+      // Single-field query only — avoids composite index requirements.
       final results = await Future.wait<dynamic>([
         FirebaseFirestore.instance.collection('users').doc(partnerId).get(),
-        FirebaseFirestore.instance.collection('pacts')
+        FirebaseFirestore.instance
+            .collection('pacts')
             .where('coupleId', isEqualTo: coupleId)
-            .where('createdBy', isEqualTo: uid).get(),
-        FirebaseFirestore.instance.collection('pacts')
-            .where('coupleId', isEqualTo: coupleId)
-            .where('status', isEqualTo: 'accepted').get(),
-        FirebaseFirestore.instance.collection('pacts')
-            .where('coupleId', isEqualTo: coupleId).get(),
+            .get(),
       ]);
       if (!mounted) return;
       final pd = (results[0] as DocumentSnapshot<Map<String, dynamic>>).data();
+      final allPacts = (results[1] as QuerySnapshot<Map<String, dynamic>>).docs;
       setState(() {
         _partnerFirstName = pd?['firstName'] as String?;
         _partnerLastName = pd?['lastName'] as String?;
         _partnerPhotoURL = pd?['photoURL'] as String?;
-        _proposedCount = (results[1] as QuerySnapshot).docs.length;
-        _acceptedCount = (results[2] as QuerySnapshot).docs.length;
-        _totalCount = (results[3] as QuerySnapshot).docs.length;
+        _proposedCount = allPacts.where((d) => d['createdBy'] == uid).length;
+        _acceptedCount =
+            allPacts.where((d) => d['status'] == 'accepted').length;
+        _totalCount = allPacts.length;
         _isLoading = false;
       });
     } catch (_) {

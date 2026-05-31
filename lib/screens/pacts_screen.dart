@@ -7,10 +7,10 @@ import '../theme/app_colors.dart';
 class PactsScreen extends StatefulWidget {
   const PactsScreen({super.key});
   @override
-  State<PactsScreen> createState() => _PactsScreenState();
+  PactsScreenState createState() => PactsScreenState();
 }
 
-class _PactsScreenState extends State<PactsScreen>
+class PactsScreenState extends State<PactsScreen>
     with SingleTickerProviderStateMixin {
   static const _monthsFr = [
     'jan', 'fév', 'mar', 'avr', 'mai', 'juin',
@@ -31,6 +31,10 @@ class _PactsScreenState extends State<PactsScreen>
   bool _pactsReady = false;
   List<QueryDocumentSnapshot<Map<String, dynamic>>> _allPacts = [];
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _countSub;
+
+  void jumpToTab(int index) {
+    if (index >= 0 && index < 3) _tabController.animateTo(index);
+  }
 
   @override
   void initState() {
