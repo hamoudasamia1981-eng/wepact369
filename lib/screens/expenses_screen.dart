@@ -205,36 +205,6 @@ class ExpensesScreenState extends State<ExpensesScreen> {
     }
   }
 
-  Widget _personFilterChip({
-    required String initial,
-    required Color color,
-    required String value,
-  }) {
-    final selected = _personFilter == value;
-    return GestureDetector(
-      onTap: () => setState(() => _personFilter = value),
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: selected ? color : color.withAlpha(60),
-          border: selected ? Border.all(color: color, width: 2) : null,
-        ),
-        child: Center(
-          child: Text(
-            initial,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -256,12 +226,6 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                 .where('createdBy', isEqualTo: _currentUid)
                 .snapshots()
             : null;
-
-    final partnerInitial = _partnerFirstName?.isNotEmpty == true
-        ? _partnerFirstName![0].toUpperCase()
-        : '?';
-    final myInitial =
-        _firstName?.isNotEmpty == true ? _firstName![0].toUpperCase() : '?';
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -351,59 +315,6 @@ class ExpensesScreenState extends State<ExpensesScreen> {
               }).toList(),
             ),
           ),
-          // Person filter (only when couple is linked)
-          if (_coupleId != null) ...[
-            const SizedBox(height: 6),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Partner avatar (A = purple)
-                _personFilterChip(
-                  initial: partnerInitial,
-                  color: AppColors.primary,
-                  value: 'partner',
-                ),
-                const SizedBox(width: 10),
-                // Tous (default)
-                GestureDetector(
-                  onTap: () => setState(() => _personFilter = 'tous'),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 8),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: _personFilter == 'tous'
-                          ? AppColors.primary
-                          : AppColors.white,
-                      border: Border.all(
-                        color: _personFilter == 'tous'
-                            ? Colors.transparent
-                            : AppColors.textGrey.withAlpha(100),
-                      ),
-                    ),
-                    child: Text(
-                      'Tous',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: _personFilter == 'tous'
-                            ? Colors.white
-                            : AppColors.textGrey,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                // My avatar (S = orange)
-                _personFilterChip(
-                  initial: myInitial,
-                  color: AppColors.secondary,
-                  value: 'mine',
-                ),
-              ],
-            ),
-          ],
-          const SizedBox(height: 4),
           // Content
           Expanded(
             child: stream == null
@@ -510,108 +421,178 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                                 crossAxisAlignment:
                                     CrossAxisAlignment.center,
                                 children: [
-                                  Column(children: [
-                                    CircleAvatar(
-                                      radius: 18,
-                                      backgroundColor:
-                                          Colors.white.withAlpha(76),
-                                      child: Text(myI,
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight:
-                                                  FontWeight.bold)),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(_firstName ?? '',
-                                        style: const TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.white)),
-                                    Text(
-                                        '$_currency${myTotal.toStringAsFixed(2)}',
-                                        style: const TextStyle(
-                                            fontSize: 18,
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold)),
-                                    const SizedBox(height: 4),
-                                    SizedBox(
-                                      width: 70,
-                                      child: LinearProgressIndicator(
-                                        value: myR,
-                                        backgroundColor:
-                                            Colors.white.withAlpha(76),
-                                        valueColor:
-                                            const AlwaysStoppedAnimation(
-                                                Colors.white),
+                                  // Left — tap to filter by current user
+                                  GestureDetector(
+                                    onTap: () => setState(
+                                        () => _personFilter = 'mine'),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 4, horizontal: 2),
+                                      decoration: BoxDecoration(
+                                        color: _personFilter == 'mine'
+                                            ? Colors.white.withAlpha(30)
+                                            : Colors.transparent,
                                         borderRadius:
-                                            BorderRadius.circular(4),
+                                            BorderRadius.circular(8),
+                                        border: _personFilter == 'mine'
+                                            ? const Border(
+                                                bottom: BorderSide(
+                                                    color: Colors.white,
+                                                    width: 2))
+                                            : null,
                                       ),
-                                    ),
-                                  ]),
-                                  Expanded(
-                                    child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          const Text('TOTAL',
-                                              style: TextStyle(
-                                                  fontSize: 11,
-                                                  color: Colors.white70,
-                                                  fontWeight:
-                                                      FontWeight.bold,
-                                                  letterSpacing: 1.2)),
-                                          Text(
-                                              '$_currency${total.toStringAsFixed(2)}',
+                                      child: Column(children: [
+                                        CircleAvatar(
+                                          radius: 18,
+                                          backgroundColor:
+                                              Colors.white.withAlpha(76),
+                                          child: Text(myI,
                                               style: const TextStyle(
-                                                  fontSize: 22,
                                                   color: Colors.white,
                                                   fontWeight:
                                                       FontWeight.bold)),
-                                          const Text('ensemble',
-                                              style: TextStyle(
-                                                  fontSize: 11,
-                                                  color: Colors.white60)),
-                                          const SizedBox(height: 8),
-                                          const Icon(Icons.bar_chart,
-                                              color: Colors.white60,
-                                              size: 20),
-                                        ]),
-                                  ),
-                                  Column(children: [
-                                    CircleAvatar(
-                                      radius: 18,
-                                      backgroundColor: AppColors.secondary,
-                                      child: Text(pI,
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight:
-                                                  FontWeight.bold)),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(_firstName ?? '',
+                                            style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.white)),
+                                        Text(
+                                            '$_currency${myTotal.toStringAsFixed(2)}',
+                                            style: const TextStyle(
+                                                fontSize: 18,
+                                                color: Colors.white,
+                                                fontWeight:
+                                                    FontWeight.bold)),
+                                        const SizedBox(height: 4),
+                                        SizedBox(
+                                          width: 70,
+                                          child: LinearProgressIndicator(
+                                            value: myR,
+                                            backgroundColor:
+                                                Colors.white.withAlpha(76),
+                                            valueColor:
+                                                const AlwaysStoppedAnimation(
+                                                    Colors.white),
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                          ),
+                                        ),
+                                      ]),
                                     ),
-                                    const SizedBox(height: 4),
-                                    Text(_partnerFirstName ?? '',
-                                        style: const TextStyle(
-                                            fontSize: 12,
-                                            color: AppColors.secondary)),
-                                    Text(
-                                        '$_currency${partnerTotal.toStringAsFixed(2)}',
-                                        style: const TextStyle(
-                                            fontSize: 18,
-                                            color: AppColors.secondary,
-                                            fontWeight: FontWeight.bold)),
-                                    const SizedBox(height: 4),
-                                    SizedBox(
-                                      width: 70,
-                                      child: LinearProgressIndicator(
-                                        value: pR,
-                                        backgroundColor:
-                                            Colors.white.withAlpha(76),
-                                        valueColor:
-                                            const AlwaysStoppedAnimation(
-                                                AppColors.secondary),
-                                        borderRadius:
-                                            BorderRadius.circular(4),
+                                  ),
+                                  // Center — tap to show all (default)
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () => setState(
+                                          () => _personFilter = 'tous'),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: _personFilter == 'tous'
+                                              ? Colors.white.withAlpha(30)
+                                              : Colors.transparent,
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          border: _personFilter == 'tous'
+                                              ? const Border(
+                                                  bottom: BorderSide(
+                                                      color: Colors.white,
+                                                      width: 2))
+                                              : null,
+                                        ),
+                                        child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              const Text('TOTAL',
+                                                  style: TextStyle(
+                                                      fontSize: 11,
+                                                      color: Colors.white70,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      letterSpacing: 1.2)),
+                                              Text(
+                                                  '$_currency${total.toStringAsFixed(2)}',
+                                                  style: const TextStyle(
+                                                      fontSize: 22,
+                                                      color: Colors.white,
+                                                      fontWeight:
+                                                          FontWeight.bold)),
+                                              const Text('ensemble',
+                                                  style: TextStyle(
+                                                      fontSize: 11,
+                                                      color:
+                                                          Colors.white60)),
+                                              const SizedBox(height: 8),
+                                              const Icon(Icons.bar_chart,
+                                                  color: Colors.white60,
+                                                  size: 20),
+                                            ]),
                                       ),
                                     ),
-                                  ]),
+                                  ),
+                                  // Right — tap to filter by partner
+                                  GestureDetector(
+                                    onTap: () => setState(
+                                        () => _personFilter = 'partner'),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 4, horizontal: 2),
+                                      decoration: BoxDecoration(
+                                        color: _personFilter == 'partner'
+                                            ? Colors.white.withAlpha(30)
+                                            : Colors.transparent,
+                                        borderRadius:
+                                            BorderRadius.circular(8),
+                                        border: _personFilter == 'partner'
+                                            ? const Border(
+                                                bottom: BorderSide(
+                                                    color: Colors.white,
+                                                    width: 2))
+                                            : null,
+                                      ),
+                                      child: Column(children: [
+                                        CircleAvatar(
+                                          radius: 18,
+                                          backgroundColor:
+                                              AppColors.secondary,
+                                          child: Text(pI,
+                                              style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight:
+                                                      FontWeight.bold)),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(_partnerFirstName ?? '',
+                                            style: const TextStyle(
+                                                fontSize: 12,
+                                                color: AppColors.secondary)),
+                                        Text(
+                                            '$_currency${partnerTotal.toStringAsFixed(2)}',
+                                            style: const TextStyle(
+                                                fontSize: 18,
+                                                color: AppColors.secondary,
+                                                fontWeight:
+                                                    FontWeight.bold)),
+                                        const SizedBox(height: 4),
+                                        SizedBox(
+                                          width: 70,
+                                          child: LinearProgressIndicator(
+                                            value: pR,
+                                            backgroundColor:
+                                                Colors.white.withAlpha(76),
+                                            valueColor:
+                                                const AlwaysStoppedAnimation(
+                                                    AppColors.secondary),
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                          ),
+                                        ),
+                                      ]),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),

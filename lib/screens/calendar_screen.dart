@@ -468,7 +468,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 ),
                                 const Spacer(),
                                 Text(
-                                  '${selectedPacts.length} pact${selectedPacts.length != 1 ? 's' : ''}',
+                                  '${selectedPacts.length} pacte${selectedPacts.length != 1 ? 's' : ''}',
                                   style: const TextStyle(
                                       color: AppColors.textGrey),
                                 ),

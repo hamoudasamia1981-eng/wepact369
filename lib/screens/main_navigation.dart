@@ -169,7 +169,7 @@ class _MainNavigationState extends State<MainNavigation> {
           BottomNavigationBarItem(
             icon: Icon(Icons.handshake_outlined),
             activeIcon: Icon(Icons.handshake),
-            label: 'Pacts',
+            label: 'Pactes',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_today_outlined),
