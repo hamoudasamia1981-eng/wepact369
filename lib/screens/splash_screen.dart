@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../config/app_localizations.dart';
 import '../services/partner_service.dart';
 import '../theme/app_colors.dart';
 
@@ -79,14 +80,17 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'La vie à deux, sans friction.',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
+            Builder(builder: (ctx) {
+              final l = AppLocalizations.of(ctx);
+              return Text(
+                l.splashTagline,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontStyle: FontStyle.italic,
+                ),
+              );
+            }),
           ],
         ),
       ),

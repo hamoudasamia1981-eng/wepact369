@@ -1,8 +1,10 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
+import 'providers/language_provider.dart';
 import 'screens/forgot_password_screen.dart';
 import 'screens/invite_partner_screen.dart';
 import 'screens/login_screen.dart';
@@ -16,9 +18,14 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  final prefs = await SharedPreferences.getInstance();
+  final savedLang = prefs.getString('language') ?? 'fr';
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => AppAuthProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AppAuthProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider(savedLang)),
+      ],
       child: const WePact369App(),
     ),
   );

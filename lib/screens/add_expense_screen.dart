@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../config/app_localizations.dart';
+import '../providers/language_provider.dart';
 import '../theme/app_colors.dart';
 
 class AddExpenseScreen extends StatefulWidget {
@@ -20,10 +23,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     'Transport': '🚗', 'Enfants': '👶', 'Maison': '🛋️',
     'Loisirs': '🎭', 'Santé': '💊', 'Autre': '💳',
   };
-  static const _monthsFr = [
-    'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
-    'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
-  ];
 
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
@@ -68,8 +67,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     super.dispose();
   }
 
-  String _formatDate(DateTime d) =>
-      '${d.day} ${_monthsFr[d.month - 1]} ${d.year}';
+  String _formatDate(DateTime d, AppLocalizations l) =>
+      '${d.day} ${l.monthsShort[d.month - 1]} ${d.year}';
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
@@ -82,20 +81,21 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   }
 
   Future<void> _save() async {
+    final l = context.read<LanguageProvider>().l10n;
     final title = _titleController.text.trim();
     if (title.isEmpty) {
-      _showError('Veuillez saisir un titre.');
+      _showError(l.enterTitle);
       return;
     }
     final amountText =
         _amountController.text.trim().replaceAll(',', '.');
     final amount = double.tryParse(amountText);
     if (amount == null || amount <= 0) {
-      _showError('Veuillez saisir un montant valide.');
+      _showError(l.validAmount);
       return;
     }
     if (_coupleId == null) {
-      _showError('Liez d\'abord votre compte à un partenaire.');
+      _showError(l.linkPartnerFirst);
       return;
     }
     final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -116,7 +116,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       if (!mounted) return;
       Navigator.pop(context);
     } catch (_) {
-      if (mounted) _showError('Erreur lors de l\'enregistrement.');
+      if (mounted) _showError(l.saveError);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -132,25 +132,31 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.white,
         elevation: 0,
         leading: const BackButton(color: AppColors.textDark),
-        title: const Text(
-          'Nouvelle dépense',
-          style: TextStyle(
+        title: Text(
+          l.newExpenseTitle,
+          style: const TextStyle(
               color: AppColors.textDark, fontWeight: FontWeight.w600),
         ),
+        actions: const [
+          LangToggleButton(dark: false),
+          SizedBox(width: 8),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Titre',
-                style: TextStyle(
+            Text(l.titleFieldLabel,
+                style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textDark)),
@@ -158,27 +164,26 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             TextField(
               controller: _titleController,
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(
-                  hintText: 'ex. Courses du samedi'),
+              decoration: InputDecoration(
+                  hintText: l.titleHint),
             ),
             const SizedBox(height: 20),
 
-            Text('Montant ($_currency)',
+            Text('${l.amountLabel} ($_currency)',
                 style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textDark)),
             const SizedBox(height: 8),
-            TextField(
-              controller: _amountController,
-              keyboardType: const TextInputType.numberWithOptions(
+            const TextField(
+              keyboardType: TextInputType.numberWithOptions(
                   decimal: true),
-              decoration: const InputDecoration(hintText: '0,00'),
+              decoration: InputDecoration(hintText: '0,00'),
             ),
             const SizedBox(height: 20),
 
-            const Text('Catégorie',
-                style: TextStyle(
+            Text(l.categoryLabel,
+                style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textDark)),
@@ -213,7 +218,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                             style: const TextStyle(fontSize: 16)),
                         const SizedBox(width: 4),
                         Text(
-                          cat,
+                          l.expenseCategoryLabel(cat),
                           style: TextStyle(
                               fontSize: 13,
                               color: selected
@@ -228,8 +233,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             ),
             const SizedBox(height: 20),
 
-            const Text('Date',
-                style: TextStyle(
+            Text(l.dateLabel,
+                style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textDark)),
@@ -248,7 +253,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   const Icon(Icons.calendar_today,
                       color: AppColors.primary, size: 20),
                   const SizedBox(width: 8),
-                  Text(_formatDate(_selectedDate),
+                  Text(_formatDate(_selectedDate, l),
                       style: const TextStyle(
                           color: AppColors.textDark, fontSize: 14)),
                 ]),
@@ -270,8 +275,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         height: 22,
                         child: CircularProgressIndicator(
                             color: Colors.white, strokeWidth: 2))
-                    : const Text('Enregistrer la dépense',
-                        style: TextStyle(
+                    : Text(l.saveExpenseButton,
+                        style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.white)),
               ),

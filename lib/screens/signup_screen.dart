@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../config/app_localizations.dart';
+import '../providers/language_provider.dart';
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
 
@@ -37,38 +40,21 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
-  String _frenchError(String code) {
-    switch (code) {
-      case 'email-already-in-use':
-        return 'Un compte existe déjà avec cet email.';
-      case 'invalid-email':
-        return 'Adresse email invalide.';
-      case 'weak-password':
-        return 'Mot de passe trop faible.';
-      case 'network-request-failed':
-        return 'Erreur réseau. Vérifiez votre connexion.';
-      default:
-        return 'Une erreur est survenue. Veuillez réessayer.';
-    }
-  }
-
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+      backgroundColor: AppColors.error,
+      behavior: SnackBarBehavior.floating,
+    ));
   }
 
   Future<void> _submit() async {
+    final l = context.read<LanguageProvider>().l10n;
     if (!_formKey.currentState!.validate()) return;
     if (!_termsAccepted) {
-      _showError('Veuillez accepter les conditions');
+      _showError(l.acceptTermsError);
       return;
     }
-
     setState(() => _isLoading = true);
     try {
       final cred = await _authService.signUpWithEmail(
@@ -76,7 +62,7 @@ class _SignupScreenState extends State<SignupScreen> {
         _passwordController.text,
       );
       final user = cred.user;
-      if (user == null) throw Exception('Aucun utilisateur retourné.');
+      if (user == null) throw Exception('no user');
 
       await _authService.updateDisplayName(
         '${_prenomController.text.trim()} ${_nomController.text.trim()}',
@@ -102,10 +88,10 @@ class _SignupScreenState extends State<SignupScreen> {
       Navigator.pushReplacementNamed(context, '/invite-partner');
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
-      _showError(_frenchError(e.code));
+      _showError(context.read<LanguageProvider>().l10n.authError(e.code));
     } catch (_) {
       if (!mounted) return;
-      _showError('Erreur lors de la création du compte. Veuillez réessayer.');
+      _showError(context.read<LanguageProvider>().l10n.signupError);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -117,7 +103,6 @@ class _SignupScreenState extends State<SignupScreen> {
       final cred = await _authService.signInWithGoogle();
       if (!mounted || cred == null) return;
       final user = cred.user!;
-
       final docRef =
           FirebaseFirestore.instance.collection('users').doc(user.uid);
       final doc = await docRef.get();
@@ -136,15 +121,14 @@ class _SignupScreenState extends State<SignupScreen> {
           'photoURL': user.photoURL,
         });
       }
-
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/invite-partner');
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
-      _showError(_frenchError(e.code));
+      _showError(context.read<LanguageProvider>().l10n.authError(e.code));
     } catch (_) {
       if (!mounted) return;
-      _showError('Connexion Google annulée.');
+      _showError(context.read<LanguageProvider>().l10n.googleCancelled);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -157,10 +141,12 @@ class _SignupScreenState extends State<SignupScreen> {
   }) {
     final isMale = value == 'male';
     final isSelected = _gender == value;
-    final selectedBorderColor = isMale ? AppColors.primary : AppColors.secondary;
-    final selectedBgColor = isMale ? AppColors.purpleLight : AppColors.orangeLight;
-    final selectedTextColor = isMale ? AppColors.primary : AppColors.secondary;
-
+    final selectedBorderColor =
+        isMale ? AppColors.primary : AppColors.secondary;
+    final selectedBgColor =
+        isMale ? AppColors.purpleLight : AppColors.orangeLight;
+    final selectedTextColor =
+        isMale ? AppColors.primary : AppColors.secondary;
     return Expanded(
       child: GestureDetector(
         onTap: () => setState(() => _gender = value),
@@ -171,7 +157,9 @@ class _SignupScreenState extends State<SignupScreen> {
             color: isSelected ? selectedBgColor : AppColors.white,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isSelected ? selectedBorderColor : AppColors.textGrey.withAlpha(76),
+              color: isSelected
+                  ? selectedBorderColor
+                  : AppColors.textGrey.withAlpha(76),
               width: isSelected ? 2 : 1,
             ),
           ),
@@ -185,7 +173,8 @@ class _SignupScreenState extends State<SignupScreen> {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: isSelected ? selectedTextColor : AppColors.textGrey,
+                  color:
+                      isSelected ? selectedTextColor : AppColors.textGrey,
                 ),
               ),
             ],
@@ -197,20 +186,27 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.white,
         elevation: 0,
         leading: const BackButton(color: AppColors.textDark),
-        title: const Text(
-          'Créer un compte',
-          style: TextStyle(color: AppColors.textDark, fontWeight: FontWeight.w600),
+        title: Text(
+          l.signupTitle,
+          style: const TextStyle(
+              color: AppColors.textDark, fontWeight: FontWeight.w600),
         ),
+        actions: const [
+          LangToggleButton(dark: false),
+          SizedBox(width: 8),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
           child: Form(
             key: _formKey,
             child: Column(
@@ -220,55 +216,58 @@ class _SignupScreenState extends State<SignupScreen> {
                   controller: _prenomController,
                   textCapitalization: TextCapitalization.words,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Prénom',
-                    prefixIcon: Icon(Icons.person_outline),
+                  decoration: InputDecoration(
+                    labelText: l.firstNameLabel,
+                    prefixIcon: const Icon(Icons.person_outline),
                   ),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Champ requis' : null,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? l.fieldRequired
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _nomController,
                   textCapitalization: TextCapitalization.words,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Nom',
-                    prefixIcon: Icon(Icons.person_outline),
+                  decoration: InputDecoration(
+                    labelText: l.lastNameLabel,
+                    prefixIcon: const Icon(Icons.person_outline),
                   ),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Champ requis' : null,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? l.fieldRequired
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined),
+                  decoration: InputDecoration(
+                    labelText: l.emailLabel,
+                    prefixIcon: const Icon(Icons.email_outlined),
                   ),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Champ requis';
-                    if (!v.contains('@')) return 'Email invalide';
+                    if (v == null || v.trim().isEmpty) return l.fieldRequired;
+                    if (!v.contains('@')) return l.invalidEmail;
                     return null;
                   },
                 ),
                 const SizedBox(height: 20),
-                const Text(
-                  'Genre',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textDark,
-                  ),
-                ),
+                Text(l.genderLabel,
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textDark)),
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    _genderCard(value: 'male', emoji: '👨', label: 'Homme'),
+                    _genderCard(
+                        value: 'male', emoji: '👨', label: l.maleLabel),
                     const SizedBox(width: 12),
-                    _genderCard(value: 'female', emoji: '👩', label: 'Femme'),
+                    _genderCard(
+                        value: 'female',
+                        emoji: '👩',
+                        label: l.femaleLabel),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -277,21 +276,19 @@ class _SignupScreenState extends State<SignupScreen> {
                   obscureText: _obscurePassword,
                   textInputAction: TextInputAction.next,
                   decoration: InputDecoration(
-                    labelText: 'Mot de passe',
+                    labelText: l.passwordLabel,
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                      ),
-                      onPressed: () =>
-                          setState(() => _obscurePassword = !_obscurePassword),
+                      icon: Icon(_obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined),
+                      onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword),
                     ),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Champ requis';
-                    if (v.length < 6) return 'Minimum 6 caractères';
+                    if (v == null || v.isEmpty) return l.fieldRequired;
+                    if (v.length < 6) return l.passwordMin;
                     return null;
                   },
                 ),
@@ -302,22 +299,20 @@ class _SignupScreenState extends State<SignupScreen> {
                   textInputAction: TextInputAction.done,
                   onFieldSubmitted: (_) => _submit(),
                   decoration: InputDecoration(
-                    labelText: 'Confirmer le mot de passe',
+                    labelText: l.confirmPasswordLabel,
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureConfirm
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                      ),
-                      onPressed: () =>
-                          setState(() => _obscureConfirm = !_obscureConfirm),
+                      icon: Icon(_obscureConfirm
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined),
+                      onPressed: () => setState(
+                          () => _obscureConfirm = !_obscureConfirm),
                     ),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Champ requis';
+                    if (v == null || v.isEmpty) return l.fieldRequired;
                     if (v != _passwordController.text) {
-                      return 'Les mots de passe ne correspondent pas';
+                      return l.passwordsMismatch;
                     }
                     return null;
                   },
@@ -341,22 +336,20 @@ class _SignupScreenState extends State<SignupScreen> {
                       child: RichText(
                         text: TextSpan(
                           style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textGrey,
-                          ),
+                              fontSize: 13, color: AppColors.textGrey),
                           children: [
-                            const TextSpan(text: "J'accepte les "),
-                            const TextSpan(
-                              text: "Conditions d'utilisation",
-                              style: TextStyle(
+                            TextSpan(text: l.acceptTermsPrefix),
+                            TextSpan(
+                              text: l.termsLink,
+                              style: const TextStyle(
                                 color: AppColors.primary,
                                 decoration: TextDecoration.underline,
                               ),
                             ),
-                            const TextSpan(text: ' et la '),
-                            const TextSpan(
-                              text: 'Politique de confidentialité',
-                              style: TextStyle(
+                            TextSpan(text: l.andThe),
+                            TextSpan(
+                              text: l.privacyLink,
+                              style: const TextStyle(
                                 color: AppColors.primary,
                                 decoration: TextDecoration.underline,
                               ),
@@ -377,11 +370,9 @@ class _SignupScreenState extends State<SignupScreen> {
                             height: 22,
                             width: 22,
                             child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
+                                color: Colors.white, strokeWidth: 2),
                           )
-                        : const Text('Créer mon compte'),
+                        : Text(l.createAccountButton),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -390,13 +381,10 @@ class _SignupScreenState extends State<SignupScreen> {
                     const Expanded(child: Divider()),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(
-                        'ou continuer avec',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textGrey.withAlpha(180),
-                        ),
-                      ),
+                      child: Text(l.orContinueWith,
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textGrey.withAlpha(180))),
                     ),
                     const Expanded(child: Divider()),
                   ],
@@ -406,19 +394,16 @@ class _SignupScreenState extends State<SignupScreen> {
                   height: 56,
                   child: OutlinedButton(
                     onPressed: _isLoading ? null : _signUpWithGoogle,
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          'G',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFFEA4335),
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        Text('Continuer avec Google'),
+                        const Text('G',
+                            style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFFEA4335))),
+                        const SizedBox(width: 10),
+                        Text(l.continueWithGoogle),
                       ],
                     ),
                   ),
@@ -427,18 +412,16 @@ class _SignupScreenState extends State<SignupScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
-                      'Déjà un compte ? ',
-                      style: TextStyle(color: AppColors.textGrey),
-                    ),
+                    Text(l.alreadyAccount,
+                        style:
+                            const TextStyle(color: AppColors.textGrey)),
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text(
-                        'Se connecter',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      child: Text(
+                        l.signInLink,
+                        style: const TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600),
                       ),
                     ),
                   ],

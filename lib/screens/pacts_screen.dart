@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../config/app_localizations.dart';
 import '../theme/app_colors.dart';
 
 class PactsScreen extends StatefulWidget {
@@ -12,11 +13,6 @@ class PactsScreen extends StatefulWidget {
 
 class PactsScreenState extends State<PactsScreen>
     with SingleTickerProviderStateMixin {
-  static const _monthsFr = [
-    'jan', 'fév', 'mar', 'avr', 'mai', 'juin',
-    'juil', 'août', 'sep', 'oct', 'nov', 'déc',
-  ];
-
   late final TabController _tabController;
   final _db = FirebaseFirestore.instance;
 
@@ -104,12 +100,12 @@ class PactsScreenState extends State<PactsScreen>
     }
   }
 
-  String _formatDate(Timestamp ts) {
+  String _formatDate(Timestamp ts, AppLocalizations l) {
     final d = ts.toDate();
-    return '${d.day} ${_monthsFr[d.month - 1]}';
+    return '${d.day} ${l.monthsShort[d.month - 1]}';
   }
 
-  Widget _buildStatusBadge(String status) {
+  Widget _buildStatusBadge(String status, AppLocalizations l) {
     switch (status) {
       case 'accepted':
         return Container(
@@ -118,11 +114,11 @@ class PactsScreenState extends State<PactsScreen>
           decoration: BoxDecoration(
               color: const Color(0xFFD1FAE5),
               borderRadius: BorderRadius.circular(20)),
-          child: const Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.check, size: 11, color: AppColors.success),
-            SizedBox(width: 4),
-            Text('Accepté',
-                style: TextStyle(
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            const Icon(Icons.check, size: 11, color: AppColors.success),
+            const SizedBox(width: 4),
+            Text(l.acceptedBadge,
+                style: const TextStyle(
                     fontSize: 11,
                     color: AppColors.success,
                     fontWeight: FontWeight.bold)),
@@ -135,11 +131,11 @@ class PactsScreenState extends State<PactsScreen>
           decoration: BoxDecoration(
               color: const Color(0xFFFEE2E2),
               borderRadius: BorderRadius.circular(20)),
-          child: const Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.close, size: 11, color: AppColors.error),
-            SizedBox(width: 4),
-            Text('Refusé',
-                style: TextStyle(
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            const Icon(Icons.close, size: 11, color: AppColors.error),
+            const SizedBox(width: 4),
+            Text(l.declinedBadge,
+                style: const TextStyle(
                     fontSize: 11,
                     color: AppColors.error,
                     fontWeight: FontWeight.bold)),
@@ -152,12 +148,12 @@ class PactsScreenState extends State<PactsScreen>
           decoration: BoxDecoration(
               color: AppColors.orangeLight,
               borderRadius: BorderRadius.circular(20)),
-          child: const Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.access_time,
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            const Icon(Icons.access_time,
                 size: 11, color: AppColors.secondary),
-            SizedBox(width: 4),
-            Text('En attente',
-                style: TextStyle(
+            const SizedBox(width: 4),
+            Text(l.pendingBadge,
+                style: const TextStyle(
                     fontSize: 11,
                     color: AppColors.secondary,
                     fontWeight: FontWeight.bold)),
@@ -174,7 +170,8 @@ class PactsScreenState extends State<PactsScreen>
   }
 
   Widget _buildPactCard(
-      QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+      QueryDocumentSnapshot<Map<String, dynamic>> doc,
+      AppLocalizations l) {
     final data = doc.data();
     final title = data['title'] as String? ?? '';
     final status = data['status'] as String? ?? 'pending';
@@ -186,8 +183,8 @@ class PactsScreenState extends State<PactsScreen>
     final createdAt = data['createdAt'] as Timestamp?;
 
     final proposerName = createdBy == _currentUid
-        ? 'Vous'
-        : (_partnerFirstName ?? 'Partenaire');
+        ? l.youLabel
+        : (_partnerFirstName ?? l.partnerLabel);
     final bgColor = type == 'initiative'
         ? AppColors.orangeLight
         : AppColors.purpleLight;
@@ -228,7 +225,7 @@ class PactsScreenState extends State<PactsScreen>
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
                               color: AppColors.textDark)),
-                      Text('Proposé par $proposerName',
+                      Text(l.proposedBy(proposerName),
                           style: const TextStyle(
                               fontSize: 13,
                               color: AppColors.primary)),
@@ -245,7 +242,7 @@ class PactsScreenState extends State<PactsScreen>
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    _buildStatusBadge(status),
+                    _buildStatusBadge(status, l),
                     const SizedBox(height: 4),
                     if (displayDate != null)
                       Row(
@@ -254,7 +251,7 @@ class PactsScreenState extends State<PactsScreen>
                           const Icon(Icons.calendar_today,
                               size: 12, color: AppColors.textGrey),
                           const SizedBox(width: 4),
-                          Text(_formatDate(displayDate),
+                          Text(_formatDate(displayDate, l),
                               style: const TextStyle(
                                   fontSize: 12,
                                   color: AppColors.textGrey)),
@@ -283,7 +280,7 @@ class PactsScreenState extends State<PactsScreen>
                               borderRadius:
                                   BorderRadius.circular(8)),
                         ),
-                        child: const Text('Refuser'),
+                        child: Text(l.declineButton),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -296,7 +293,7 @@ class PactsScreenState extends State<PactsScreen>
                               borderRadius:
                                   BorderRadius.circular(8)),
                         ),
-                        child: const Text('Accepter'),
+                        child: Text(l.acceptButton),
                       ),
                     ),
                   ],
@@ -308,7 +305,7 @@ class PactsScreenState extends State<PactsScreen>
     );
   }
 
-  Widget _buildTab(String status) {
+  Widget _buildTab(String status, AppLocalizations l) {
     if (_coupleId == null || !_pactsReady) {
       return const Center(
           child: CircularProgressIndicator(color: AppColors.primary));
@@ -336,10 +333,10 @@ class PactsScreenState extends State<PactsScreen>
             const SizedBox(height: 12),
             Text(
               status == 'accepted'
-                  ? 'Aucun pact accepté'
+                  ? l.noAcceptedPacts
                   : status == 'pending'
-                      ? 'Aucune proposition en attente'
-                      : 'Aucun pact refusé',
+                      ? l.noPendingPacts
+                      : l.noDeclinedPacts,
               style: const TextStyle(color: AppColors.textGrey),
             ),
           ],
@@ -349,7 +346,7 @@ class PactsScreenState extends State<PactsScreen>
     return ListView.builder(
       padding: const EdgeInsets.only(bottom: 80),
       itemCount: filtered.length,
-      itemBuilder: (_, i) => _buildPactCard(filtered[i]),
+      itemBuilder: (_, i) => _buildPactCard(filtered[i], l),
     );
   }
 
@@ -380,6 +377,8 @@ class PactsScreenState extends State<PactsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: AppColors.background,
@@ -396,29 +395,33 @@ class PactsScreenState extends State<PactsScreen>
         backgroundColor: AppColors.white,
         elevation: 0,
         centerTitle: true,
-        title: const Text('Pactes',
-            style: TextStyle(
+        title: Text(l.pactsTitle,
+            style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
                 color: AppColors.textDark)),
+        actions: const [
+          LangToggleButton(dark: false),
+          SizedBox(width: 8),
+        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: AppColors.primary,
           labelColor: AppColors.primary,
           unselectedLabelColor: AppColors.textGrey,
           tabs: [
-            _tabLabel('À faire', _aFaireCount, AppColors.primary),
-            _tabLabel('En attente', _enAttenteCount, AppColors.secondary),
-            _tabLabel('Refusé', _refuseCount, AppColors.error),
+            _tabLabel(l.toDoTab, _aFaireCount, AppColors.primary),
+            _tabLabel(l.pendingTab, _enAttenteCount, AppColors.secondary),
+            _tabLabel(l.declinedTab, _refuseCount, AppColors.error),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildTab('accepted'),
-          _buildTab('pending'),
-          _buildTab('declined'),
+          _buildTab('accepted', l),
+          _buildTab('pending', l),
+          _buildTab('declined', l),
         ],
       ),
     );

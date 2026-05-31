@@ -9,9 +9,11 @@ class AppAuthProvider extends ChangeNotifier {
 
   AuthStatus _status = AuthStatus.idle;
   String? _errorMessage;
+  String? _errorCode;
 
   AuthStatus get status => _status;
   String? get errorMessage => _errorMessage;
+  String? get errorCode => _errorCode;
   bool get isLoading => _status == AuthStatus.loading;
   User? get currentUser => _service.currentUser;
   Stream<User?> get authStateChanges => _service.authStateChanges;
@@ -68,7 +70,7 @@ class AppAuthProvider extends ChangeNotifier {
       _fail(_message(e.code));
       return false;
     } catch (_) {
-      _fail('Google sign in failed. Please try again.');
+      _fail('google-sign-in-failed');
       return false;
     }
   }
@@ -104,21 +106,13 @@ class AppAuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _fail(String message) {
+  void _fail(String code) {
     _status = AuthStatus.error;
-    _errorMessage = message;
+    _errorCode = code;
+    _errorMessage = code;
     notifyListeners();
   }
 
-  String _message(String code) => switch (code) {
-        'user-not-found' => 'No account found with this email.',
-        'wrong-password' => 'Incorrect password.',
-        'invalid-credential' => 'Invalid email or password.',
-        'email-already-in-use' => 'An account already exists with this email.',
-        'invalid-email' => 'Invalid email address.',
-        'weak-password' => 'Password must be at least 6 characters.',
-        'too-many-requests' => 'Too many attempts. Please try again later.',
-        'network-request-failed' => 'Network error. Check your connection.',
-        _ => 'Authentication failed. Please try again.',
-      };
+  // errorCode is exposed so the UI can translate it via AppLocalizations.
+  String _message(String code) => code;
 }

@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../config/app_localizations.dart';
+import '../providers/language_provider.dart';
 import '../theme/app_colors.dart';
 
 class AddTaskScreen extends StatefulWidget {
@@ -18,10 +21,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     'Santé': '💊',
     'Autre': '💳',
   };
-  static const _monthsFr = [
-    'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
-    'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
-  ];
 
   final _titleController = TextEditingController();
   final _descController = TextEditingController();
@@ -46,8 +45,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     if (picked != null) setState(() => _selectedDate = picked);
   }
 
-  String _formatDate(DateTime d) =>
-      '${d.day} ${_monthsFr[d.month - 1]} ${d.year}';
+  String _formatDate(DateTime d, AppLocalizations l) =>
+      '${d.day} ${l.monthsShort[d.month - 1]} ${d.year}';
 
   void _showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -58,9 +57,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   }
 
   Future<void> _save() async {
+    final l = context.read<LanguageProvider>().l10n;
     final title = _titleController.text.trim();
     if (title.isEmpty) {
-      _showError('Veuillez saisir un titre.');
+      _showError(l.enterTitle);
       return;
     }
     final user = FirebaseAuth.instance.currentUser;
@@ -72,7 +72,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
           .collection('users').doc(user.uid).get();
       final partnerId = userDoc.data()?['partnerId'] as String?;
       if (partnerId == null) {
-        _showError('Liez d\'abord votre compte à un partenaire.');
+        _showError(l.linkPartnerFirst);
         setState(() => _isLoading = false);
         return;
       }
@@ -93,7 +93,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       if (!mounted) return;
       Navigator.pop(context);
     } catch (_) {
-      if (mounted) _showError('Erreur lors de l\'enregistrement.');
+      if (mounted) _showError(l.saveError);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -101,15 +101,21 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.white,
         elevation: 0,
         leading: const BackButton(color: AppColors.textDark),
-        title: const Text('Nouvelle tâche',
-            style: TextStyle(
+        title: Text(l.newTaskTitle,
+            style: const TextStyle(
                 color: AppColors.textDark, fontWeight: FontWeight.w600)),
+        actions: const [
+          LangToggleButton(dark: false),
+          SizedBox(width: 8),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -117,8 +123,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Category chips
-            const Text('Catégorie',
-                style: TextStyle(
+            Text(l.categoryLabel,
+                style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textDark)),
@@ -151,7 +157,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                             Text(e.value,
                                 style: const TextStyle(fontSize: 16)),
                             const SizedBox(width: 4),
-                            Text(e.key,
+                            Text(l.taskCategoryLabel(e.key),
                                 style: TextStyle(
                                     fontSize: 13,
                                     color: sel
@@ -167,8 +173,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             ),
             const SizedBox(height: 20),
 
-            const Text('Titre de la tâche',
-                style: TextStyle(
+            Text(l.taskTitleLabel,
+                style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textDark)),
@@ -177,12 +183,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               controller: _titleController,
               textCapitalization: TextCapitalization.sentences,
               decoration:
-                  const InputDecoration(hintText: 'ex. Faire les courses'),
+                  InputDecoration(hintText: l.taskHint),
             ),
             const SizedBox(height: 20),
 
-            const Text('Description (optionnel)',
-                style: TextStyle(
+            Text(l.descriptionLabel,
+                style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textDark)),
@@ -190,13 +196,13 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             TextField(
               controller: _descController,
               maxLines: 4,
-              decoration: const InputDecoration(
-                  hintText: 'Ajoutez des détails...'),
+              decoration: InputDecoration(
+                  hintText: l.descriptionHint),
             ),
             const SizedBox(height: 20),
 
-            const Text('Date limite',
-                style: TextStyle(
+            Text(l.deadlineLabel,
+                style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textDark)),
@@ -217,8 +223,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   const SizedBox(width: 8),
                   Text(
                     _selectedDate != null
-                        ? _formatDate(_selectedDate!)
-                        : 'Choisir une date',
+                        ? _formatDate(_selectedDate!, l)
+                        : l.chooseDate,
                     style: TextStyle(
                         color: _selectedDate != null
                             ? AppColors.textDark
@@ -244,8 +250,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                         height: 22,
                         child: CircularProgressIndicator(
                             color: Colors.white, strokeWidth: 2))
-                    : const Text('Proposer la tâche',
-                        style: TextStyle(
+                    : Text(l.proposeTaskButton,
+                        style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.white)),
               ),

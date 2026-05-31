@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../config/app_localizations.dart';
 import '../theme/app_colors.dart';
 
 class CalendarScreen extends StatefulWidget {
@@ -10,15 +11,6 @@ class CalendarScreen extends StatefulWidget {
 }
 
 class _CalendarScreenState extends State<CalendarScreen> {
-  static const _dayHeaders = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
-  static const _monthsFr = [
-    'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
-    'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
-  ];
-  static const _daysFrFull = [
-    'Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi',
-  ];
-
   DateTime _focusedMonth = DateTime.now();
   DateTime _selectedDay = DateTime.now();
   String? _coupleId;
@@ -174,7 +166,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Widget _buildPactCard(
-      QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+      QueryDocumentSnapshot<Map<String, dynamic>> doc,
+      AppLocalizations l) {
     final data = doc.data();
     final title = data['title'] as String? ?? '';
     final status = data['status'] as String? ?? 'pending';
@@ -185,23 +178,23 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ? AppColors.orangeLight
         : AppColors.purpleLight;
     final proposerName = createdBy == _currentUid
-        ? 'Vous'
-        : (_partnerFirstName ?? 'Partenaire');
+        ? l.youLabel
+        : (_partnerFirstName ?? l.partnerLabel);
 
     Color badgeColor;
     String badgeText;
     switch (status) {
       case 'accepted':
         badgeColor = AppColors.success;
-        badgeText = 'Accepté';
+        badgeText = l.acceptedBadge;
         break;
       case 'declined':
         badgeColor = AppColors.error;
-        badgeText = 'Refusé';
+        badgeText = l.declinedBadge;
         break;
       default:
         badgeColor = AppColors.secondary;
-        badgeText = 'En attente';
+        badgeText = l.pendingBadge;
     }
 
     return Container(
@@ -238,7 +231,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textDark)),
-                Text('Proposé par $proposerName',
+                Text(l.proposedBy(proposerName),
                     style: const TextStyle(
                         fontSize: 12, color: AppColors.primary)),
               ],
@@ -263,6 +256,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: AppColors.background,
@@ -277,8 +272,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final lastOfMonth =
         DateTime(_focusedMonth.year, _focusedMonth.month + 1, 0, 23, 59, 59);
     final selectedDayLabel =
-        '${_daysFrFull[_selectedDay.weekday % 7]} ${_selectedDay.day} '
-        '${_monthsFr[_selectedDay.month - 1]}';
+        '${l.daysFull[_selectedDay.weekday % 7]} ${_selectedDay.day} '
+        '${l.monthsFull[_selectedDay.month - 1]}';
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -287,17 +282,21 @@ class _CalendarScreenState extends State<CalendarScreen> {
         backgroundColor: AppColors.white,
         elevation: 0,
         centerTitle: true,
-        title: const Text('Calendrier',
-            style: TextStyle(
+        title: Text(l.calendarTitle,
+            style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
                 color: AppColors.textDark)),
+        actions: const [
+          LangToggleButton(dark: false),
+          SizedBox(width: 8),
+        ],
       ),
       body: _coupleId == null
-          ? const Center(
+          ? Center(
               child: Text(
-                'Connectez-vous à un partenaire pour voir le calendrier.',
-                style: TextStyle(color: AppColors.textGrey),
+                l.connectCalendar,
+                style: const TextStyle(color: AppColors.textGrey),
                 textAlign: TextAlign.center,
               ),
             )
@@ -343,7 +342,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             Expanded(
                               child: Center(
                                 child: Text(
-                                  '${_monthsFr[_focusedMonth.month - 1]} ${_focusedMonth.year}',
+                                  '${l.monthsFull[_focusedMonth.month - 1]} ${_focusedMonth.year}',
                                   style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
@@ -364,7 +363,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16),
                         child: Row(
-                          children: _dayHeaders
+                          children: l.dayHeaders
                               .map((h) => Expanded(
                                     child: Center(
                                       child: Text(h,
@@ -424,8 +423,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                       color: AppColors.primary,
                                       shape: BoxShape.circle)),
                               const SizedBox(width: 4),
-                              const Text('Tâche',
-                                  style: TextStyle(
+                              Text(l.taskType,
+                                  style: const TextStyle(
                                       fontSize: 12,
                                       color: AppColors.textGrey)),
                             ]),
@@ -438,8 +437,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                       color: AppColors.secondary,
                                       shape: BoxShape.circle)),
                               const SizedBox(width: 4),
-                              const Text('Initiative',
-                                  style: TextStyle(
+                              Text(l.initiativeType,
+                                  style: const TextStyle(
                                       fontSize: 12,
                                       color: AppColors.textGrey)),
                             ]),
@@ -468,7 +467,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 ),
                                 const Spacer(),
                                 Text(
-                                  '${selectedPacts.length} pacte${selectedPacts.length != 1 ? 's' : ''}',
+                                  l.pacteCount(selectedPacts.length),
                                   style: const TextStyle(
                                       color: AppColors.textGrey),
                                 ),
@@ -476,20 +475,20 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             ),
                             const SizedBox(height: 12),
                             if (selectedPacts.isEmpty)
-                              const Center(
+                              Center(
                                 child: Padding(
-                                  padding: EdgeInsets.symmetric(
+                                  padding: const EdgeInsets.symmetric(
                                       vertical: 24),
                                   child: Text(
-                                    'Aucun pacte ce jour',
-                                    style: TextStyle(
+                                    l.noPactsDay,
+                                    style: const TextStyle(
                                         color: AppColors.textGrey),
                                   ),
                                 ),
                               )
                             else
                               ...selectedPacts
-                                  .map(_buildPactCard),
+                                  .map((p) => _buildPactCard(p, l)),
                             const SizedBox(height: 16),
                           ],
                         ),

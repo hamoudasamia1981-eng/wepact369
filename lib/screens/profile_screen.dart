@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../config/app_localizations.dart';
+import '../providers/language_provider.dart';
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
 import 'settings_screen.dart';
@@ -13,17 +16,11 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  static const _monthsFr = [
-    'jan', 'fév', 'mar', 'avr', 'mai', 'juin',
-    'juil', 'août', 'sep', 'oct', 'nov', 'déc',
-  ];
-
   String? _firstName, _photoURL, _email;
   String? _partnerFirstName, _partnerLastName, _partnerPhotoURL;
   Timestamp? _partnerSince;
   int _proposedCount = 0, _acceptedCount = 0, _totalCount = 0;
   bool _darkMode = false;
-  String _language = 'fr';
   bool _isLoading = true;
 
   @override
@@ -38,7 +35,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (!mounted) return;
     setState(() {
       _darkMode = prefs.getBool('darkMode') ?? false;
-      _language = prefs.getString('language') ?? 'fr';
     });
   }
 
@@ -99,16 +95,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (mounted) setState(() => _darkMode = value);
   }
 
-  Future<void> _toggleLanguage() async {
-    final prefs = await SharedPreferences.getInstance();
-    final next = _language == 'fr' ? 'en' : 'fr';
-    await prefs.setString('language', next);
-    if (mounted) setState(() => _language = next);
-  }
-
-  String _formatDate(Timestamp ts) {
+  String _formatDate(Timestamp ts, AppLocalizations l) {
     final d = ts.toDate();
-    return '${d.day} ${_monthsFr[d.month - 1]} ${d.year}';
+    return '${d.day} ${l.monthsShort[d.month - 1]} ${d.year}';
   }
 
   String get _displayName => _firstName ?? 'Mon profil';
@@ -119,21 +108,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String get _myInitial =>
       (_firstName?.isNotEmpty == true) ? _firstName![0].toUpperCase() : '?';
 
-  Future<void> _signOut() async {
+  Future<void> _signOut(AppLocalizations l) async {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Déconnexion'),
-        content: const Text('Êtes-vous sûr de vouloir vous déconnecter ?'),
+        title: Text(l.signOutTitle),
+        content: Text(l.signOutConfirm),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Annuler',
-                  style: TextStyle(color: AppColors.textGrey))),
+              child: Text(l.cancel,
+                  style: const TextStyle(color: AppColors.textGrey))),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Confirmer'),
+            child: Text(l.confirm),
           ),
         ],
       ),
@@ -148,6 +137,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final langProvider = context.watch<LanguageProvider>();
+
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: AppColors.background,
@@ -180,7 +172,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       const Spacer(),
                       GestureDetector(
-                        onTap: _toggleLanguage,
+                        onTap: () => langProvider.setLanguage(
+                            langProvider.code == 'fr' ? 'en' : 'fr'),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 6),
@@ -192,12 +185,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                _language == 'fr' ? '🇫🇷' : '🇬🇧',
+                                langProvider.code == 'fr' ? '🇫🇷' : '🇬🇧',
                                 style: const TextStyle(fontSize: 14),
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                _language == 'fr' ? 'FR' : 'EN',
+                                langProvider.code == 'fr' ? 'FR' : 'EN',
                                 style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
@@ -261,7 +254,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   if (_partnerSince != null) ...[
                     const SizedBox(height: 4),
                     Text(
-                      '❤️ Ensemble depuis le ${_formatDate(_partnerSince!)}',
+                      l.togetherSince(_formatDate(_partnerSince!, l)),
                       style: const TextStyle(
                           fontSize: 13, color: Colors.white60),
                     ),
@@ -271,13 +264,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildStat('$_proposedCount', 'Proposés'),
+                      _buildStat('$_proposedCount', l.proposedLabel),
                       Container(width: 1, height: 30,
                           color: Colors.white30),
-                      _buildStat('$_acceptedCount', 'Acceptés'),
+                      _buildStat('$_acceptedCount', l.acceptedLabel),
                       Container(width: 1, height: 30,
                           color: Colors.white30),
-                      _buildStat('$_totalCount', 'Total'),
+                      _buildStat('$_totalCount', l.totalLabel),
                     ],
                   ),
                 ],
@@ -286,10 +279,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // ── PARTENAIRE ────────────────────────────────────────────
             if (_partnerFirstName != null) ...[
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 20, 16, 8),
-                child: Text('PARTENAIRE',
-                    style: TextStyle(
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                child: Text(l.partnerSection,
+                    style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textGrey,
@@ -325,7 +318,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         fontSize: 15),
                   ),
                   subtitle: Text(
-                    '❤️ Connecté avec ${_firstName ?? ''}',
+                    l.connectedWith(_firstName ?? ''),
                     style: const TextStyle(
                         fontSize: 13, color: AppColors.textGrey),
                   ),
@@ -334,10 +327,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
 
             // ── PARAMÈTRES ────────────────────────────────────────────
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 20, 16, 8),
-              child: Text('PARAMÈTRES',
-                  style: TextStyle(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+              child: Text(l.settingsSection,
+                  style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
                       color: AppColors.textGrey,
@@ -354,8 +347,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ListTile(
                     leading: _iconBox(
                         AppColors.purpleLight, Icons.settings, AppColors.primary),
-                    title: const Text('Paramètres',
-                        style: TextStyle(
+                    title: Text(l.settingsLabel,
+                        style: const TextStyle(
                             fontSize: 15, color: AppColors.textDark)),
                     trailing: const Icon(Icons.chevron_right,
                         color: AppColors.textGrey),
@@ -370,8 +363,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const Color(0xFFFEF3C7),
                         Icons.dark_mode,
                         Color(0xFFF59E0B)),
-                    title: const Text('Mode sombre',
-                        style: TextStyle(
+                    title: Text(l.darkModeLabel,
+                        style: const TextStyle(
                             fontSize: 15, color: AppColors.textDark)),
                     trailing: Switch(
                       value: _darkMode,
@@ -383,14 +376,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ListTile(
                     leading: _iconBox(AppColors.purpleLight,
                         Icons.notifications_outlined, AppColors.primary),
-                    title: const Text('Notifications',
-                        style: TextStyle(
+                    title: Text(l.notificationsLabel,
+                        style: const TextStyle(
                             fontSize: 15, color: AppColors.textDark)),
                     trailing: const Icon(Icons.chevron_right,
                         color: AppColors.textGrey),
                     onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Bientôt disponible'),
+                      SnackBar(
+                        content: Text(l.comingSoon),
                         behavior: SnackBarBehavior.floating,
                       ),
                     ),
@@ -411,12 +404,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: ListTile(
                 leading: _iconBox(
                     const Color(0xFFFFEBEE), Icons.logout, AppColors.error),
-                title: const Text('Se déconnecter',
-                    style: TextStyle(
+                title: Text(l.signOutLabel,
+                    style: const TextStyle(
                         color: AppColors.error,
                         fontWeight: FontWeight.bold,
                         fontSize: 15)),
-                onTap: _signOut,
+                onTap: () => _signOut(l),
               ),
             ),
 

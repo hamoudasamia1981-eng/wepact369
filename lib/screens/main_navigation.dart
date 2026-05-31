@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../config/app_localizations.dart';
+import '../providers/language_provider.dart';
 import '../theme/app_colors.dart';
 import 'add_expense_screen.dart';
 import 'add_initiative_screen.dart';
@@ -54,7 +57,8 @@ class _MainNavigationState extends State<MainNavigation> {
     });
   }
 
-  void _showCreationSheet() {
+  void _showCreationSheet(BuildContext context) {
+    final l = context.read<LanguageProvider>().l10n;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -78,10 +82,10 @@ class _MainNavigationState extends State<MainNavigation> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Que voulez-vous créer ?',
+            Text(
+              l.createWhat,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textDark),
@@ -92,8 +96,8 @@ class _MainNavigationState extends State<MainNavigation> {
               borderColor: AppColors.secondary,
               icon: Icons.credit_card,
               iconColor: AppColors.secondary,
-              title: 'Dépense',
-              subtitle: 'Ajouter une dépense partagée',
+              title: l.createExpenseLabel,
+              subtitle: l.createExpenseSubtitle,
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(context,
@@ -106,8 +110,8 @@ class _MainNavigationState extends State<MainNavigation> {
               borderColor: AppColors.primary,
               icon: Icons.assignment,
               iconColor: AppColors.primary,
-              title: 'Tâche',
-              subtitle: 'À organiser ou à faire',
+              title: l.createTaskLabel,
+              subtitle: l.createTaskSubtitle,
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(context,
@@ -120,8 +124,8 @@ class _MainNavigationState extends State<MainNavigation> {
               borderColor: AppColors.secondary,
               icon: Icons.stars,
               iconColor: AppColors.secondary,
-              title: 'Initiative',
-              subtitle: 'Une idée à partager',
+              title: l.createInitiativeLabel,
+              subtitle: l.createInitiativeSubtitle,
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(context,
@@ -138,10 +142,40 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+
+    final navItems = [
+      BottomNavigationBarItem(
+        icon: const Icon(Icons.home_outlined),
+        activeIcon: const Icon(Icons.home),
+        label: l.navHome,
+      ),
+      BottomNavigationBarItem(
+        icon: const Icon(Icons.receipt_long_outlined),
+        activeIcon: const Icon(Icons.receipt_long),
+        label: l.navExpenses,
+      ),
+      BottomNavigationBarItem(
+        icon: const Icon(Icons.handshake_outlined),
+        activeIcon: const Icon(Icons.handshake),
+        label: l.navPacts,
+      ),
+      BottomNavigationBarItem(
+        icon: const Icon(Icons.calendar_today_outlined),
+        activeIcon: const Icon(Icons.calendar_today),
+        label: l.navCalendar,
+      ),
+      BottomNavigationBarItem(
+        icon: const Icon(Icons.person_outline),
+        activeIcon: const Icon(Icons.person),
+        label: l.navProfile,
+      ),
+    ];
+
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: _screens),
       floatingActionButton: FloatingActionButton(
-        onPressed: _showCreationSheet,
+        onPressed: () => _showCreationSheet(context),
         backgroundColor: AppColors.primary,
         elevation: 4,
         child: const Icon(Icons.add, color: Colors.white, size: 28),
@@ -155,33 +189,7 @@ class _MainNavigationState extends State<MainNavigation> {
         type: BottomNavigationBarType.fixed,
         backgroundColor: AppColors.white,
         elevation: 8,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Accueil',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long_outlined),
-            activeIcon: Icon(Icons.receipt_long),
-            label: 'Dépenses',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.handshake_outlined),
-            activeIcon: Icon(Icons.handshake),
-            label: 'Pactes',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined),
-            activeIcon: Icon(Icons.calendar_today),
-            label: 'Calendrier',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profil',
-          ),
-        ],
+        items: navItems,
       ),
     );
   }

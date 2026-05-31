@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../config/app_localizations.dart';
+import '../providers/language_provider.dart';
 import '../theme/app_colors.dart';
 
 class AddInitiativeScreen extends StatefulWidget {
@@ -18,10 +21,6 @@ class _AddInitiativeScreenState extends State<AddInitiativeScreen> {
     'Cadeau': '🎁',
     'Autre': '🎊',
   };
-  static const _monthsFr = [
-    'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
-    'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
-  ];
 
   final _titleController = TextEditingController();
   final _descController = TextEditingController();
@@ -57,8 +56,8 @@ class _AddInitiativeScreenState extends State<AddInitiativeScreen> {
     if (picked != null) setState(() => _selectedTime = picked);
   }
 
-  String _formatDate(DateTime d) =>
-      '${d.day} ${_monthsFr[d.month - 1]} ${d.year}';
+  String _formatDate(DateTime d, AppLocalizations l) =>
+      '${d.day} ${l.monthsShort[d.month - 1]} ${d.year}';
 
   String _formatTime(TimeOfDay t) =>
       '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
@@ -72,9 +71,10 @@ class _AddInitiativeScreenState extends State<AddInitiativeScreen> {
   }
 
   Future<void> _save() async {
+    final l = context.read<LanguageProvider>().l10n;
     final title = _titleController.text.trim();
     if (title.isEmpty) {
-      _showError('Veuillez saisir un titre.');
+      _showError(l.enterTitle);
       return;
     }
     final user = FirebaseAuth.instance.currentUser;
@@ -86,7 +86,7 @@ class _AddInitiativeScreenState extends State<AddInitiativeScreen> {
           .collection('users').doc(user.uid).get();
       final partnerId = userDoc.data()?['partnerId'] as String?;
       if (partnerId == null) {
-        _showError('Liez d\'abord votre compte à un partenaire.');
+        _showError(l.linkPartnerFirst);
         setState(() => _isLoading = false);
         return;
       }
@@ -116,7 +116,7 @@ class _AddInitiativeScreenState extends State<AddInitiativeScreen> {
       if (!mounted) return;
       Navigator.pop(context);
     } catch (_) {
-      if (mounted) _showError('Erreur lors de l\'enregistrement.');
+      if (mounted) _showError(l.saveError);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -124,15 +124,21 @@ class _AddInitiativeScreenState extends State<AddInitiativeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.white,
         elevation: 0,
         leading: const BackButton(color: AppColors.textDark),
-        title: const Text('Nouvelle initiative',
-            style: TextStyle(
+        title: Text(l.newInitiativeTitle,
+            style: const TextStyle(
                 color: AppColors.textDark, fontWeight: FontWeight.w600)),
+        actions: const [
+          LangToggleButton(dark: false),
+          SizedBox(width: 8),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -140,8 +146,8 @@ class _AddInitiativeScreenState extends State<AddInitiativeScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Category chips (orange style)
-            const Text('Catégorie',
-                style: TextStyle(
+            Text(l.categoryLabel,
+                style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textDark)),
@@ -176,7 +182,7 @@ class _AddInitiativeScreenState extends State<AddInitiativeScreen> {
                             Text(e.value,
                                 style: const TextStyle(fontSize: 16)),
                             const SizedBox(width: 4),
-                            Text(e.key,
+                            Text(l.initiativeCategoryLabel(e.key),
                                 style: TextStyle(
                                     fontSize: 13,
                                     color: sel
@@ -192,8 +198,8 @@ class _AddInitiativeScreenState extends State<AddInitiativeScreen> {
             ),
             const SizedBox(height: 20),
 
-            const Text('Titre de l\'initiative',
-                style: TextStyle(
+            Text(l.initiativeTitleLabel,
+                style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textDark)),
@@ -202,12 +208,12 @@ class _AddInitiativeScreenState extends State<AddInitiativeScreen> {
               controller: _titleController,
               textCapitalization: TextCapitalization.sentences,
               decoration:
-                  const InputDecoration(hintText: 'ex. Dîner romantique'),
+                  InputDecoration(hintText: l.initiativeHint),
             ),
             const SizedBox(height: 20),
 
-            const Text('Description (optionnel)',
-                style: TextStyle(
+            Text(l.descriptionLabel,
+                style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textDark)),
@@ -215,8 +221,8 @@ class _AddInitiativeScreenState extends State<AddInitiativeScreen> {
             TextField(
               controller: _descController,
               maxLines: 4,
-              decoration: const InputDecoration(
-                  hintText: 'Décrivez votre idée...'),
+              decoration: InputDecoration(
+                  hintText: l.initiativeDescHint),
             ),
             const SizedBox(height: 20),
 
@@ -228,8 +234,8 @@ class _AddInitiativeScreenState extends State<AddInitiativeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Date',
-                          style: TextStyle(
+                      Text(l.dateLabel,
+                          style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                               color: AppColors.textDark)),
@@ -251,8 +257,8 @@ class _AddInitiativeScreenState extends State<AddInitiativeScreen> {
                             Flexible(
                               child: Text(
                                 _selectedDate != null
-                                    ? _formatDate(_selectedDate!)
-                                    : 'Date',
+                                    ? _formatDate(_selectedDate!, l)
+                                    : l.dateLabel,
                                 style: TextStyle(
                                     fontSize: 13,
                                     color: _selectedDate != null
@@ -271,8 +277,8 @@ class _AddInitiativeScreenState extends State<AddInitiativeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Heure',
-                          style: TextStyle(
+                      Text(l.timeLabel,
+                          style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                               color: AppColors.textDark)),
@@ -295,7 +301,7 @@ class _AddInitiativeScreenState extends State<AddInitiativeScreen> {
                               child: Text(
                                 _selectedTime != null
                                     ? _formatTime(_selectedTime!)
-                                    : 'Heure',
+                                    : l.timeLabel,
                                 style: TextStyle(
                                     fontSize: 13,
                                     color: _selectedTime != null
@@ -313,18 +319,18 @@ class _AddInitiativeScreenState extends State<AddInitiativeScreen> {
             ),
             const SizedBox(height: 20),
 
-            const Text('Lieu (optionnel)',
-                style: TextStyle(
+            Text(l.locationLabel,
+                style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textDark)),
             const SizedBox(height: 8),
             TextField(
               controller: _locationController,
-              decoration: const InputDecoration(
-                hintText: 'ex. Restaurant Le Jardin',
+              decoration: InputDecoration(
+                hintText: l.locationHint,
                 prefixIcon:
-                    Icon(Icons.location_on, color: AppColors.secondary),
+                    const Icon(Icons.location_on, color: AppColors.secondary),
               ),
             ),
             const SizedBox(height: 32),
@@ -358,9 +364,9 @@ class _AddInitiativeScreenState extends State<AddInitiativeScreen> {
                           height: 22,
                           child: CircularProgressIndicator(
                               color: Colors.white, strokeWidth: 2))
-                      : const Text(
-                          'Proposer l\'initiative',
-                          style: TextStyle(
+                      : Text(
+                          l.proposeInitiativeButton,
+                          style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 16),

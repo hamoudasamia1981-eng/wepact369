@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import '../config/app_constants.dart';
+import '../config/app_localizations.dart';
+import '../providers/language_provider.dart';
 import '../theme/app_colors.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -13,7 +15,6 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   String _selectedCurrency = AppConstants.defaultCurrency;
-  String _selectedLanguage = 'fr';
   bool _isLoading = true;
 
   @override
@@ -24,11 +25,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadSettings() async {
     final user = FirebaseAuth.instance.currentUser;
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(() => _selectedLanguage = prefs.getString('language') ?? 'fr');
     if (user == null) {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
       return;
     }
     try {
@@ -58,22 +56,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _setLanguage(String lang) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('language', lang);
-    if (mounted) setState(() => _selectedLanguage = lang);
+    await context.read<LanguageProvider>().setLanguage(lang);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final langCode = context.watch<LanguageProvider>().code;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.white,
         elevation: 0,
         leading: const BackButton(color: AppColors.textDark),
-        title: const Text('Paramètres',
-            style: TextStyle(
+        title: Text(l.settingsTitle,
+            style: const TextStyle(
                 color: AppColors.textDark, fontWeight: FontWeight.w600)),
+        actions: const [
+          LangToggleButton(dark: false),
+          SizedBox(width: 8),
+        ],
       ),
       body: _isLoading
           ? const Center(
@@ -84,8 +87,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // DEVISE
-                  const Text('Devise',
-                      style: TextStyle(
+                  Text(l.currencyLabel,
+                      style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: AppColors.textDark)),
@@ -123,17 +126,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 32),
 
                   // LANGUE
-                  const Text('Langue',
-                      style: TextStyle(
+                  Text(l.languageLabel,
+                      style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: AppColors.textDark)),
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      Expanded(child: _buildLangCard('fr', '🇫🇷', 'Français')),
+                      Expanded(child: _buildLangCard('fr', '🇫🇷', 'Français', langCode)),
                       const SizedBox(width: 12),
-                      Expanded(child: _buildLangCard('en', '🇬🇧', 'English')),
+                      Expanded(child: _buildLangCard('en', '🇬🇧', 'English', langCode)),
                     ],
                   ),
                 ],
@@ -142,8 +145,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildLangCard(String code, String flag, String label) {
-    final sel = _selectedLanguage == code;
+  Widget _buildLangCard(String code, String flag, String label, String langCode) {
+    final sel = langCode == code;
     return GestureDetector(
       onTap: () => _setLanguage(code),
       child: Container(

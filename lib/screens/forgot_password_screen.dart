@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../config/app_localizations.dart';
 import '../providers/auth_provider.dart';
+import '../providers/language_provider.dart';
 import '../theme/app_colors.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -24,23 +26,24 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> _sendReset() async {
     if (!_formKey.currentState!.validate()) return;
     final auth = context.read<AppAuthProvider>();
-    final success = await auth.forgotPassword(_emailController.text.trim());
+    final success =
+        await auth.forgotPassword(_emailController.text.trim());
     if (!mounted) return;
     if (success) {
       setState(() => _emailSent = true);
-    } else if (auth.errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(auth.errorMessage!),
-          backgroundColor: Colors.red.shade700,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+    } else if (auth.errorCode != null) {
+      final l = context.read<LanguageProvider>().l10n;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(l.authError(auth.errorCode!)),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+      ));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final isLoading = context.watch<AppAuthProvider>().isLoading;
 
     return Scaffold(
@@ -49,11 +52,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         backgroundColor: AppColors.white,
         elevation: 0,
         leading: const BackButton(color: AppColors.textDark),
-        title: const Text(
-          'Mot de passe oublié',
-          style: TextStyle(
+        title: Text(
+          l.forgotPasswordTitle,
+          style: const TextStyle(
               color: AppColors.textDark, fontWeight: FontWeight.w600),
         ),
+        actions: const [LangToggleButton(dark: false), SizedBox(width: 8)],
       ),
       body: SafeArea(
         child: Padding(
@@ -87,6 +91,7 @@ class _FormView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Form(
       key: formKey,
       child: Column(
@@ -95,9 +100,9 @@ class _FormView extends StatelessWidget {
           const SizedBox(height: 16),
           const Icon(Icons.lock_reset, size: 64, color: AppColors.primary),
           const SizedBox(height: 24),
-          const Text(
-            'Mot de passe oublié ?',
-            style: TextStyle(
+          Text(
+            l.forgotPasswordHeading,
+            style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
               color: AppColors.textDark,
@@ -105,9 +110,9 @@ class _FormView extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Entrez votre email et nous vous enverrons un lien de réinitialisation.',
-            style: TextStyle(color: AppColors.textGrey, fontSize: 15),
+          Text(
+            l.forgotPasswordBody,
+            style: const TextStyle(color: AppColors.textGrey, fontSize: 15),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 40),
@@ -116,13 +121,13 @@ class _FormView extends StatelessWidget {
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.done,
             onFieldSubmitted: (_) => onSubmit(),
-            decoration: const InputDecoration(
-              labelText: 'Email',
-              prefixIcon: Icon(Icons.email_outlined),
+            decoration: InputDecoration(
+              labelText: l.emailLabel,
+              prefixIcon: const Icon(Icons.email_outlined),
             ),
             validator: (v) {
-              if (v == null || v.trim().isEmpty) return 'Entrez votre email';
-              if (!v.contains('@')) return 'Email invalide';
+              if (v == null || v.trim().isEmpty) return l.enterEmail;
+              if (!v.contains('@')) return l.invalidEmail;
               return null;
             },
           ),
@@ -134,9 +139,8 @@ class _FormView extends StatelessWidget {
                     height: 20,
                     width: 20,
                     child: CircularProgressIndicator(
-                        color: Colors.white, strokeWidth: 2),
-                  )
-                : const Text('Envoyer le lien'),
+                        color: Colors.white, strokeWidth: 2))
+                : Text(l.sendLink),
           ),
         ],
       ),
@@ -146,11 +150,11 @@ class _FormView extends StatelessWidget {
 
 class _SuccessView extends StatelessWidget {
   final String email;
-
   const _SuccessView({required this.email});
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -158,9 +162,9 @@ class _SuccessView extends StatelessWidget {
         const Icon(Icons.mark_email_read_outlined,
             size: 72, color: AppColors.primary),
         const SizedBox(height: 24),
-        const Text(
-          'Vérifiez votre messagerie',
-          style: TextStyle(
+        Text(
+          l.checkInbox,
+          style: const TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
             color: AppColors.textDark,
@@ -169,14 +173,14 @@ class _SuccessView extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Un lien de réinitialisation a été envoyé à $email',
+          '${l.resetSentTo} $email',
           style: const TextStyle(color: AppColors.textGrey, fontSize: 15),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 40),
         ElevatedButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Retour à la connexion'),
+          child: Text(l.backToLogin),
         ),
       ],
     );

@@ -2,24 +2,29 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../config/app_localizations.dart';
 import '../theme/app_colors.dart';
 
 class _ActivityItem {
   final String type; // 'pact' or 'expense'
   final String title;
-  final String subtitle;
   final String status;
   final String emoji;
   final bool isInitiative;
+  final bool createdByMe;
+  final String? expenseCurrency;
+  final double? expenseAmount;
   final Timestamp? createdAt;
 
   const _ActivityItem({
     required this.type,
     required this.title,
-    required this.subtitle,
     required this.status,
     required this.emoji,
     required this.isInitiative,
+    required this.createdByMe,
+    this.expenseCurrency,
+    this.expenseAmount,
     this.createdAt,
   });
 }
@@ -42,15 +47,9 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   static const _categoryEmojis = <String, String>{
-    'Alimentation': '🛒',
-    'Loyer': '🏠',
-    'Restaurant': '🍴',
-    'Transport': '🚗',
-    'Enfants': '👶',
-    'Maison': '🛋️',
-    'Loisirs': '🎭',
-    'Santé': '💊',
-    'Autre': '💳',
+    'Alimentation': '🛒', 'Loyer': '🏠', 'Restaurant': '🍴',
+    'Transport': '🚗', 'Enfants': '👶', 'Maison': '🛋️',
+    'Loisirs': '🎭', 'Santé': '💊', 'Autre': '💳',
   };
 
   final _currentUser = FirebaseAuth.instance.currentUser;
@@ -95,12 +94,10 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) setState(() => _isLoading = false);
       return;
     }
-
     try {
       final userDoc =
           await _db.collection('users').doc(_currentUser.uid).get();
       if (!mounted) return;
-
       final userData = userDoc.data();
       final partnerId = userData?['partnerId'] as String?;
       final firstName = userData?['firstName'] as String? ?? '';
@@ -119,7 +116,6 @@ class _HomeScreenState extends State<HomeScreen> {
       final partnerDoc =
           await _db.collection('users').doc(partnerId).get();
       if (!mounted) return;
-
       final uid = _currentUser.uid;
       final ids = [uid, partnerId]..sort();
       final coupleId = ids.join('_');
@@ -134,8 +130,6 @@ class _HomeScreenState extends State<HomeScreen> {
         _isLoading = false;
       });
 
-      // Single-field queries only — avoids composite index requirements.
-      // All filtering and counting done client-side.
       _pactsSub = _db
           .collection('pacts')
           .where('coupleId', isEqualTo: coupleId)
@@ -161,9 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _recompute(String uid, String partnerId) {
-    // Expense totals (all-time)
-    double myTotal = 0;
-    double partnerTotal = 0;
+    double myTotal = 0, partnerTotal = 0;
     for (final doc in _allExpenses) {
       final amount = (doc.data()['amount'] as num?)?.toDouble() ?? 0;
       if (doc.data()['createdBy'] == uid) {
@@ -173,7 +165,6 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
 
-    // Pacts counts (client-side filtering)
     final proposedCount = _allPacts
         .where((d) =>
             d.data()['status'] == 'pending' &&
@@ -187,44 +178,36 @@ class _HomeScreenState extends State<HomeScreen> {
             d.data()['createdBy'] == partnerId)
         .length;
 
-    // Combined recent activity (pacts + expenses), newest first, limit 5
     final items = <_ActivityItem>[];
-
     for (final doc in _allPacts) {
       final data = doc.data();
-      final createdBy = data['createdBy'] as String? ?? '';
-      final proposerName =
-          createdBy == uid ? 'Vous' : (_partnerFirstName ?? 'Partenaire');
       items.add(_ActivityItem(
         type: 'pact',
-        title: data['title'] as String? ?? 'Sans titre',
-        subtitle: 'Proposé par $proposerName',
+        title: data['title'] as String? ?? '',
         status: data['status'] as String? ?? 'pending',
         emoji: data['category'] as String? ?? '📋',
         isInitiative: (data['type'] as String?) == 'initiative',
+        createdByMe: (data['createdBy'] as String? ?? '') == uid,
         createdAt: data['createdAt'] as Timestamp?,
       ));
     }
-
     for (final doc in _allExpenses) {
       final data = doc.data();
       final cat = data['category'] as String? ?? 'Autre';
       final cur = data['currency'] as String? ?? _currency;
       final amount = (data['amount'] as num?)?.toDouble() ?? 0;
-      final owner = (data['createdBy'] as String? ?? '') == uid
-          ? (_firstName ?? 'Vous')
-          : (_partnerFirstName ?? 'Partenaire');
       items.add(_ActivityItem(
         type: 'expense',
-        title: data['title'] as String? ?? 'Dépense',
-        subtitle: '$owner • $cur${amount.toStringAsFixed(2)}',
+        title: data['title'] as String? ?? '',
         status: 'expense',
         emoji: _categoryEmojis[cat] ?? '💳',
         isInitiative: false,
+        createdByMe: (data['createdBy'] as String? ?? '') == uid,
+        expenseCurrency: cur,
+        expenseAmount: amount,
         createdAt: data['createdAt'] as Timestamp?,
       ));
     }
-
     items.sort((a, b) {
       final ta = a.createdAt?.millisecondsSinceEpoch ?? 0;
       final tb = b.createdAt?.millisecondsSinceEpoch ?? 0;
@@ -241,114 +224,77 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  String get _greeting {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Bonjour,';
-    if (hour < 18) return 'Bon après-midi,';
-    return 'Bonsoir,';
-  }
-
-  String get _currentMonthFr {
-    const months = [
-      'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
-      'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
-    ];
-    return months[DateTime.now().month - 1];
-  }
-
-  Widget _buildStatusBadge(String status) {
+  Widget _buildStatusBadge(String status, AppLocalizations l) {
     switch (status) {
       case 'accepted':
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: const Color(0xFFD1FAE5),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.check, size: 12, color: AppColors.success),
-              SizedBox(width: 4),
-              Text(
-                'Accepté',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: AppColors.success,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
+              color: const Color(0xFFD1FAE5),
+              borderRadius: BorderRadius.circular(20)),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            const Icon(Icons.check, size: 12, color: AppColors.success),
+            const SizedBox(width: 4),
+            Text(l.acceptedBadge,
+                style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.success,
+                    fontWeight: FontWeight.bold)),
+          ]),
         );
       case 'declined':
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: const Color(0xFFFEE2E2),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.close, size: 12, color: AppColors.error),
-              SizedBox(width: 4),
-              Text(
-                'Refusé',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: AppColors.error,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
+              color: const Color(0xFFFEE2E2),
+              borderRadius: BorderRadius.circular(20)),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            const Icon(Icons.close, size: 12, color: AppColors.error),
+            const SizedBox(width: 4),
+            Text(l.declinedBadge,
+                style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.error,
+                    fontWeight: FontWeight.bold)),
+          ]),
         );
       case 'expense':
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: AppColors.purpleLight,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.receipt_long, size: 12, color: AppColors.primary),
-              SizedBox(width: 4),
-              Text(
-                'Dépense',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
+              color: AppColors.purpleLight,
+              borderRadius: BorderRadius.circular(20)),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            const Icon(Icons.receipt_long,
+                size: 12, color: AppColors.primary),
+            const SizedBox(width: 4),
+            Text(l.expenseBadge,
+                style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold)),
+          ]),
         );
       default:
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: AppColors.orangeLight,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.access_time, size: 12, color: AppColors.secondary),
-              SizedBox(width: 4),
-              Text(
-                'En attente',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: AppColors.secondary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
+              color: AppColors.orangeLight,
+              borderRadius: BorderRadius.circular(20)),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            const Icon(Icons.access_time,
+                size: 12, color: AppColors.secondary),
+            const SizedBox(width: 4),
+            Text(l.pendingBadge,
+                style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.secondary,
+                    fontWeight: FontWeight.bold)),
+          ]),
         );
     }
   }
@@ -368,55 +314,45 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
           BoxShadow(
-            color: AppColors.cardShadow,
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          ),
+              color: AppColors.cardShadow,
+              blurRadius: 6,
+              offset: Offset(0, 2))
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: iconBgColor,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, color: iconColor, size: 20),
-          ),
-          const SizedBox(height: 8),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              value,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+              color: iconBgColor, borderRadius: BorderRadius.circular(8)),
+          child: Icon(icon, color: iconColor, size: 20),
+        ),
+        const SizedBox(height: 8),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(value,
               style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textDark,
-              ),
-            ),
-          ),
-          Text(
-            label,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDark)),
+        ),
+        Text(label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 12, color: AppColors.textGrey),
-          ),
-        ],
-      ),
+            style: const TextStyle(fontSize: 12, color: AppColors.textGrey)),
+      ]),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: AppColors.background,
         body: Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
-        ),
+            child: CircularProgressIndicator(color: AppColors.primary)),
       );
     }
 
@@ -429,16 +365,15 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  'Connectez-vous à votre partenaire pour commencer',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16, color: AppColors.textGrey),
-                ),
+                Text(l.connectPartnerMsg,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontSize: 16, color: AppColors.textGrey)),
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () =>
                       Navigator.pushNamed(context, '/invite-partner'),
-                  child: const Text('Inviter mon partenaire'),
+                  child: Text(l.invitePartnerButton),
                 ),
               ],
             ),
@@ -450,13 +385,17 @@ class _HomeScreenState extends State<HomeScreen> {
     final totalAmount = _myTotal + _partnerTotal;
     final myProgress =
         totalAmount > 0 ? (_myTotal / totalAmount).clamp(0.0, 1.0) : 0.0;
-    final partnerProgress =
-        totalAmount > 0 ? (_partnerTotal / totalAmount).clamp(0.0, 1.0) : 0.0;
-    final myInitial =
-        (_firstName?.isNotEmpty == true) ? _firstName![0].toUpperCase() : '?';
+    final partnerProgress = totalAmount > 0
+        ? (_partnerTotal / totalAmount).clamp(0.0, 1.0)
+        : 0.0;
+    final myInitial = (_firstName?.isNotEmpty == true)
+        ? _firstName![0].toUpperCase()
+        : '?';
     final partnerInitial = (_partnerFirstName?.isNotEmpty == true)
         ? _partnerFirstName![0].toUpperCase()
         : '?';
+    final currentMonth =
+        l.monthsFull[DateTime.now().month - 1];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -465,7 +404,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── HEADER ──────────────────────────────────────────────
+              // ── HEADER ──────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                 child: Row(
@@ -475,37 +414,32 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            _greeting,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: AppColors.textGrey,
-                            ),
-                          ),
+                          Text(l.greeting(DateTime.now().hour),
+                              style: const TextStyle(
+                                  fontSize: 14,
+                                  color: AppColors.textGrey)),
                           const SizedBox(height: 4),
                           Text(
                             '${_firstName ?? ''} 💜 ${_partnerFirstName ?? ''}',
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textDark,
-                            ),
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textDark),
                           ),
                           if (_pendingForMeCount > 0) ...[
                             const SizedBox(height: 4),
-                            const Text(
-                              '❤️ Une décision attend votre réponse',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: AppColors.primary,
-                              ),
-                            ),
+                            Text(l.pendingResponseInline,
+                                style: const TextStyle(
+                                    fontSize: 13,
+                                    color: AppColors.primary)),
                           ],
                         ],
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
+                    LangToggleButton(dark: false),
+                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
@@ -513,23 +447,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         shape: BoxShape.circle,
                         boxShadow: const [
                           BoxShadow(
-                            color: AppColors.cardShadow,
-                            blurRadius: 8,
-                            offset: Offset(0, 2),
-                          ),
+                              color: AppColors.cardShadow,
+                              blurRadius: 8,
+                              offset: Offset(0, 2))
                         ],
                       ),
-                      child: const Icon(
-                        Icons.notifications_outlined,
-                        color: AppColors.primary,
-                        size: 22,
-                      ),
+                      child: const Icon(Icons.notifications_outlined,
+                          color: AppColors.primary, size: 22),
                     ),
                   ],
                 ),
               ),
 
-              // ── ORANGE BANNER ────────────────────────────────────────
+              // ── ORANGE BANNER ────────────────────────────────
               if (_pendingForMeCount > 0)
                 GestureDetector(
                   onTap: () => widget.onTabChange?.call(2),
@@ -539,33 +469,28 @@ class _HomeScreenState extends State<HomeScreen> {
                     decoration: BoxDecoration(
                       color: AppColors.orangeLight,
                       borderRadius: BorderRadius.circular(12),
-                      border:
-                          Border.all(color: AppColors.secondary, width: 1),
+                      border: Border.all(
+                          color: AppColors.secondary, width: 1),
                     ),
-                    child: Row(
-                      children: [
-                        const Text('⏳', style: TextStyle(fontSize: 20)),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            '$_pendingForMeCount pacte(s) en attente de votre réponse',
-                            style: const TextStyle(
+                    child: Row(children: [
+                      const Text('⏳', style: TextStyle(fontSize: 20)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          l.pendingBannerText(_pendingForMeCount),
+                          style: const TextStyle(
                               fontSize: 14,
                               color: AppColors.secondary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                              fontWeight: FontWeight.bold),
                         ),
-                        const Icon(
-                          Icons.chevron_right,
-                          color: AppColors.secondary,
-                        ),
-                      ],
-                    ),
+                      ),
+                      const Icon(Icons.chevron_right,
+                          color: AppColors.secondary),
+                    ]),
                   ),
                 ),
 
-              // ── PURPLE EXPENSES CARD ─────────────────────────────────
+              // ── EXPENSES CARD ────────────────────────────────
               Container(
                 margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                 padding: const EdgeInsets.all(20),
@@ -578,208 +503,172 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withAlpha(76),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
+                        color: AppColors.primary.withAlpha(76),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8))
                   ],
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // My column
-                    Column(
-                      children: [
-                        CircleAvatar(
-                          radius: 20,
-                          backgroundColor: Colors.white.withAlpha(76),
-                          child: Text(
-                            myInitial,
+                    Column(children: [
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundColor: Colors.white.withAlpha(76),
+                        child: Text(myInitial,
                             style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold)),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(_firstName ?? '',
+                          style: const TextStyle(
+                              fontSize: 12, color: Colors.white)),
+                      Text('$_currency${_myTotal.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                              fontSize: 18,
                               color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                              fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 4),
+                      SizedBox(
+                        width: 80,
+                        child: LinearProgressIndicator(
+                          value: myProgress,
+                          backgroundColor: Colors.white.withAlpha(76),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                              Colors.white),
+                          borderRadius: BorderRadius.circular(4),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _firstName ?? '',
-                          style: const TextStyle(
-                              fontSize: 12, color: Colors.white),
-                        ),
-                        Text(
-                          '$_currency${_myTotal.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        SizedBox(
-                          width: 80,
-                          child: LinearProgressIndicator(
-                            value: myProgress,
-                            backgroundColor: Colors.white.withAlpha(76),
-                            valueColor: const AlwaysStoppedAnimation<Color>(
-                                Colors.white),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                      ],
-                    ),
-                    // Center total
+                      ),
+                    ]),
                     Expanded(
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'Total',
-                            style:
-                                TextStyle(fontSize: 12, color: Colors.white70),
-                          ),
-                          Text(
-                            '$_currency${totalAmount.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontSize: 22,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Partner column
-                    Column(
-                      children: [
-                        CircleAvatar(
-                          radius: 20,
-                          backgroundColor: AppColors.secondary,
-                          backgroundImage: _partnerPhotoURL != null
-                              ? NetworkImage(_partnerPhotoURL!)
-                              : null,
-                          child: _partnerPhotoURL == null
-                              ? Text(
-                                  partnerInitial,
-                                  style: const TextStyle(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(l.totalLabel,
+                                style: const TextStyle(
+                                    fontSize: 12, color: Colors.white70)),
+                            Text(
+                                '$_currency${totalAmount.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                    fontSize: 22,
                                     color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )
-                              : null,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _partnerFirstName ?? '',
+                                    fontWeight: FontWeight.bold)),
+                          ]),
+                    ),
+                    Column(children: [
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundColor: AppColors.secondary,
+                        backgroundImage: _partnerPhotoURL != null
+                            ? NetworkImage(_partnerPhotoURL!)
+                            : null,
+                        child: _partnerPhotoURL == null
+                            ? Text(partnerInitial,
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold))
+                            : null,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(_partnerFirstName ?? '',
                           style: const TextStyle(
-                              fontSize: 12, color: AppColors.secondary),
-                        ),
-                        Text(
+                              fontSize: 12, color: AppColors.secondary)),
+                      Text(
                           '$_currency${_partnerTotal.toStringAsFixed(2)}',
                           style: const TextStyle(
-                            fontSize: 18,
-                            color: AppColors.secondary,
-                            fontWeight: FontWeight.bold,
-                          ),
+                              fontSize: 18,
+                              color: AppColors.secondary,
+                              fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 4),
+                      SizedBox(
+                        width: 80,
+                        child: LinearProgressIndicator(
+                          value: partnerProgress,
+                          backgroundColor: Colors.white.withAlpha(76),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                              AppColors.secondary),
+                          borderRadius: BorderRadius.circular(4),
                         ),
-                        const SizedBox(height: 4),
-                        SizedBox(
-                          width: 80,
-                          child: LinearProgressIndicator(
-                            value: partnerProgress,
-                            backgroundColor: Colors.white.withAlpha(76),
-                            valueColor: const AlwaysStoppedAnimation<Color>(
-                                AppColors.secondary),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ]),
                   ],
                 ),
               ),
 
-              // ── 3 MINI STATS CARDS ───────────────────────────────────
+              // ── STAT CARDS ───────────────────────────────────
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => widget.onNavigateToPacts?.call(1),
-                        child: _buildStatCard(
-                          iconBgColor: AppColors.orangeLight,
-                          icon: Icons.send,
-                          iconColor: AppColors.secondary,
-                          value: _proposedCount.toString(),
-                          label: 'Pacts proposés',
-                        ),
+                child: Row(children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => widget.onNavigateToPacts?.call(1),
+                      child: _buildStatCard(
+                        iconBgColor: AppColors.orangeLight,
+                        icon: Icons.send,
+                        iconColor: AppColors.secondary,
+                        value: _proposedCount.toString(),
+                        label: l.proposedPacts,
                       ),
                     ),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => widget.onNavigateToPacts?.call(0),
-                        child: _buildStatCard(
-                          iconBgColor: const Color(0xFFD1FAE5),
-                          icon: Icons.check_circle,
-                          iconColor: AppColors.success,
-                          value: _acceptedCount.toString(),
-                          label: 'Pacts acceptés',
-                        ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => widget.onNavigateToPacts?.call(0),
+                      child: _buildStatCard(
+                        iconBgColor: const Color(0xFFD1FAE5),
+                        icon: Icons.check_circle,
+                        iconColor: AppColors.success,
+                        value: _acceptedCount.toString(),
+                        label: l.acceptedPacts,
                       ),
                     ),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () =>
-                            widget.onNavigateToExpenses?.call('Mois'),
-                        child: _buildStatCard(
-                          iconBgColor: AppColors.purpleLight,
-                          icon: Icons.calendar_today,
-                          iconColor: AppColors.primary,
-                          value: _currentMonthFr,
-                          label: 'Ce mois-ci',
-                        ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () =>
+                          widget.onNavigateToExpenses?.call('Mois'),
+                      child: _buildStatCard(
+                        iconBgColor: AppColors.purpleLight,
+                        icon: Icons.calendar_today,
+                        iconColor: AppColors.primary,
+                        value: currentMonth,
+                        label: l.thisMonth,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ]),
               ),
 
-              // ── RECENT ACTIVITY ──────────────────────────────────────
+              // ── RECENT ACTIVITY ──────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        const Text(
-                          'Activité récente',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textDark,
-                          ),
-                        ),
-                        const Spacer(),
-                        TextButton(
-                          onPressed: () => widget.onTabChange?.call(2),
-                          child: const Text(
-                            'Voir tout',
-                            style: TextStyle(color: AppColors.primary),
-                          ),
-                        ),
-                      ],
-                    ),
+                    Row(children: [
+                      Text(l.recentActivity,
+                          style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textDark)),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () => widget.onTabChange?.call(2),
+                        child: Text(l.seeAll,
+                            style: const TextStyle(
+                                color: AppColors.primary)),
+                      ),
+                    ]),
                     const SizedBox(height: 12),
                     if (_recentActivity.isEmpty)
-                      const Center(
+                      Center(
                         child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 24),
-                          child: Text(
-                            'Aucune activité pour le moment',
-                            style: TextStyle(color: AppColors.textGrey),
-                          ),
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 24),
+                          child: Text(l.noActivity,
+                              style: const TextStyle(
+                                  color: AppColors.textGrey)),
                         ),
                       )
                     else
@@ -787,7 +676,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         final cardBgColor = item.isInitiative
                             ? AppColors.orangeLight
                             : AppColors.purpleLight;
-
+                        final subtitle = item.type == 'pact'
+                            ? l.proposedBy(item.createdByMe
+                                ? l.youLabel
+                                : (_partnerFirstName ?? l.partnerLabel))
+                            : '${item.createdByMe ? (_firstName ?? '') : (_partnerFirstName ?? '')} • ${item.expenseCurrency ?? _currency}${item.expenseAmount?.toStringAsFixed(2) ?? ''}';
                         return Container(
                           margin: const EdgeInsets.only(bottom: 8),
                           padding: const EdgeInsets.all(12),
@@ -796,55 +689,44 @@ class _HomeScreenState extends State<HomeScreen> {
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: const [
                               BoxShadow(
-                                color: AppColors.cardShadow,
-                                blurRadius: 6,
-                                offset: Offset(0, 2),
-                              ),
+                                  color: AppColors.cardShadow,
+                                  blurRadius: 6,
+                                  offset: Offset(0, 2))
                             ],
                           ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
+                          child: Row(children: [
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
                                   color: cardBgColor,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    item.emoji,
-                                    style: const TextStyle(fontSize: 20),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      item.title,
+                                  borderRadius:
+                                      BorderRadius.circular(10)),
+                              child: Center(
+                                  child: Text(item.emoji,
                                       style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.textDark,
-                                      ),
-                                    ),
-                                    Text(
-                                      item.subtitle,
+                                          fontSize: 20))),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                children: [
+                                  Text(item.title,
                                       style: const TextStyle(
-                                        fontSize: 13,
-                                        color: AppColors.primary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.textDark)),
+                                  Text(subtitle,
+                                      style: const TextStyle(
+                                          fontSize: 13,
+                                          color: AppColors.primary)),
+                                ],
                               ),
-                              _buildStatusBadge(item.status),
-                            ],
-                          ),
+                            ),
+                            _buildStatusBadge(item.status, l),
+                          ]),
                         );
                       })),
                     const SizedBox(height: 16),

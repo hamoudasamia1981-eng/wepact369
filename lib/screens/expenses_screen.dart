@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../config/app_localizations.dart';
+import '../providers/language_provider.dart';
 import '../theme/app_colors.dart';
 import 'add_expense_screen.dart';
 
@@ -12,10 +15,7 @@ class ExpensesScreen extends StatefulWidget {
 }
 
 class ExpensesScreenState extends State<ExpensesScreen> {
-  static const _monthsFr = [
-    'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
-    'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
-  ];
+  // Internal keys always in French — displayed via _filterDisplay()
   static const _filters = ["Aujourd'hui", 'Semaine', 'Mois', 'Année'];
   static const _categoryEmojis = <String, String>{
     'Alimentation': '🛒', 'Loyer': '🏠', 'Restaurant': '🍴',
@@ -124,18 +124,26 @@ class ExpensesScreenState extends State<ExpensesScreen> {
     }
   }
 
-  String get _periodDisplay {
+  String _filterDisplay(String key, AppLocalizations l) => switch (key) {
+    "Aujourd'hui" => l.todayFilter,
+    'Semaine' => l.weekFilter,
+    'Mois' => l.monthFilter,
+    'Année' => l.yearFilter,
+    _ => key,
+  };
+
+  String _computePeriodDisplay(AppLocalizations l) {
     switch (_selectedFilter) {
       case "Aujourd'hui":
-        return '${_currentPeriod.day} ${_monthsFr[_currentPeriod.month - 1]}';
+        return '${_currentPeriod.day} ${l.monthsShort[_currentPeriod.month - 1]}';
       case 'Semaine':
         final diff = _currentPeriod
             .difference(DateTime(_currentPeriod.year, 1, 1)).inDays;
-        return 'Semaine ${(diff / 7).floor() + 1}';
+        return '${l.weekFilter} ${(diff / 7).floor() + 1}';
       case 'Année':
         return '${_currentPeriod.year}';
       default:
-        return '${_monthsFr[_currentPeriod.month - 1]} ${_currentPeriod.year}';
+        return '${l.monthsFull[_currentPeriod.month - 1]} ${_currentPeriod.year}';
     }
   }
 
@@ -175,26 +183,27 @@ class ExpensesScreenState extends State<ExpensesScreen> {
         }
       });
 
-  String _formatDate(Timestamp ts) {
+  String _formatDate(Timestamp ts, AppLocalizations l) {
     final d = ts.toDate();
-    return '${d.day} ${_monthsFr[d.month - 1]} ${d.year}';
+    return '${d.day} ${l.monthsShort[d.month - 1]} ${d.year}';
   }
 
   Future<void> _confirmDelete(String docId) async {
+    final l = context.read<LanguageProvider>().l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Supprimer la dépense'),
-        content: const Text('Confirmer la suppression ?'),
+        title: Text(l.deleteExpenseTitle),
+        content: Text(l.confirmDeleteMsg),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Annuler')),
+              child: Text(l.cancel)),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.error),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Supprimer'),
+            child: Text(l.delete),
           ),
         ],
       ),
@@ -207,6 +216,8 @@ class ExpensesScreenState extends State<ExpensesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: AppColors.background,
@@ -234,11 +245,15 @@ class ExpensesScreenState extends State<ExpensesScreen> {
         backgroundColor: AppColors.white,
         elevation: 0,
         centerTitle: true,
-        title: const Text('Dépenses',
-            style: TextStyle(
+        title: Text(l.expensesTitle,
+            style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
                 color: AppColors.textDark)),
+        actions: const [
+          LangToggleButton(dark: false),
+          SizedBox(width: 8),
+        ],
       ),
       body: Column(
         children: [
@@ -253,7 +268,7 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                     onPressed: _prev),
                 Expanded(
                   child: Center(
-                    child: Text(_periodDisplay,
+                    child: Text(_computePeriodDisplay(l),
                         style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -273,6 +288,7 @@ class ExpensesScreenState extends State<ExpensesScreen> {
             child: Row(
               children: _filters.map((f) {
                 final sel = _selectedFilter == f;
+                final displayLabel = _filterDisplay(f, l);
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: sel
@@ -291,7 +307,7 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                             tapTargetSize:
                                 MaterialTapTargetSize.shrinkWrap,
                           ),
-                          child: Text(f),
+                          child: Text(displayLabel),
                         )
                       : OutlinedButton(
                           onPressed: () => setState(() {
@@ -309,7 +325,7 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                             tapTargetSize:
                                 MaterialTapTargetSize.shrinkWrap,
                           ),
-                          child: Text(f),
+                          child: Text(displayLabel),
                         ),
                 );
               }).toList(),
@@ -318,10 +334,10 @@ class ExpensesScreenState extends State<ExpensesScreen> {
           // Content
           Expanded(
             child: stream == null
-                ? const Center(
+                ? Center(
                     child: Text(
-                      'Connectez-vous à un partenaire pour voir les dépenses.',
-                      style: TextStyle(color: AppColors.textGrey),
+                      l.connectForExpenses,
+                      style: const TextStyle(color: AppColors.textGrey),
                       textAlign: TextAlign.center,
                     ),
                   )
@@ -520,8 +536,8 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                                                       color: Colors.white,
                                                       fontWeight:
                                                           FontWeight.bold)),
-                                              const Text('ensemble',
-                                                  style: TextStyle(
+                                              Text(l.ensembleLabel,
+                                                  style: const TextStyle(
                                                       fontSize: 11,
                                                       color:
                                                           Colors.white60)),
@@ -598,17 +614,17 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                             ),
                             // List
                             if (docs.isEmpty)
-                              const Padding(
+                              Padding(
                                 padding:
-                                    EdgeInsets.symmetric(vertical: 40),
+                                    const EdgeInsets.symmetric(vertical: 40),
                                 child: Column(children: [
-                                  Icon(Icons.receipt_long,
+                                  const Icon(Icons.receipt_long,
                                       color: AppColors.textGrey,
                                       size: 48),
-                                  SizedBox(height: 12),
+                                  const SizedBox(height: 12),
                                   Text(
-                                      'Aucune dépense pour cette période',
-                                      style: TextStyle(
+                                      l.noExpenses,
+                                      style: const TextStyle(
                                           color: AppColors.textGrey)),
                                 ]),
                               )
@@ -640,11 +656,11 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                                     final bg = _categoryColors[cat] ??
                                         const Color(0xFFF3F4F6);
                                     final owner = by == _currentUid
-                                        ? (_firstName ?? 'Moi')
+                                        ? (_firstName ?? l.meLabel)
                                         : (_partnerFirstName ??
-                                            'Partenaire');
+                                            l.partnerLabel);
                                     final dateStr = dateTs != null
-                                        ? _formatDate(dateTs)
+                                        ? _formatDate(dateTs, l)
                                         : '';
 
                                     return Container(
@@ -689,7 +705,7 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                                                           FontWeight.bold,
                                                       color: AppColors
                                                           .textDark)),
-                                              Text('$cat • $dateStr',
+                                              Text('${l.expenseCategoryLabel(cat)} • $dateStr',
                                                   style: const TextStyle(
                                                       fontSize: 12,
                                                       color: AppColors
@@ -797,10 +813,10 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                         ),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
-                    '+ Ajouter une dépense',
-                    style: TextStyle(
+                    l.addExpenseButton,
+                    style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16),
