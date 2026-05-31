@@ -141,8 +141,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // ── PURPLE GRADIENT HEADER ────────────────────────────────
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.only(
-                  top: 60, left: 20, right: 20, bottom: 24),
+              padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 16,
+                  left: 20, right: 20, bottom: 20),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [Color(0xFF7C3AED), Color(0xFF6D28D9)],
@@ -187,12 +188,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   // Avatar
                   Stack(
                     children: [
                       CircleAvatar(
-                        radius: 44,
+                        radius: 38,
                         backgroundColor: AppColors.secondary,
                         backgroundImage: _photoURL != null
                             ? NetworkImage(_photoURL!)
@@ -202,18 +203,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 28))
+                                    fontSize: 24))
                             : null,
                       ),
                       Positioned(
                         bottom: 0,
                         right: 0,
                         child: Container(
-                          width: 28,
-                          height: 28,
+                          width: 24,
+                          height: 24,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(12),
                             boxShadow: const [
                               BoxShadow(
                                   color: AppColors.cardShadow,
@@ -221,40 +222,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ],
                           ),
                           child: const Icon(Icons.camera_alt,
-                              color: AppColors.primary, size: 16),
+                              color: AppColors.primary, size: 14),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   Text(_displayName,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: Colors.white)),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
                   Text(_email ?? '',
-                      style: const TextStyle(
-                          fontSize: 14, color: Colors.white70)),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.white.withAlpha(204))),
                   if (_partnerSince != null) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Text(
                       l.togetherSince(_formatDate(_partnerSince!, l)),
-                      style: const TextStyle(
-                          fontSize: 13, color: Colors.white60),
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withAlpha(191)),
                     ),
                   ],
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                   // Stats row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       _buildStat('$_proposedCount', l.proposedLabel),
-                      Container(width: 1, height: 30,
-                          color: Colors.white30),
+                      Container(width: 1, height: 24,
+                          color: Colors.white24),
                       _buildStat('$_acceptedCount', l.acceptedLabel),
-                      Container(width: 1, height: 30,
-                          color: Colors.white30),
+                      Container(width: 1, height: 24,
+                          color: Colors.white24),
                       _buildStat('$_totalCount', l.totalLabel),
                     ],
                   ),
@@ -265,7 +271,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // ── PARTENAIRE ────────────────────────────────────────────
             if (_partnerFirstName != null) ...[
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
                 child: Text(l.partnerSection,
                     style: const TextStyle(
                         fontSize: 11,
@@ -280,18 +286,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 child: ListTile(
-                  leading: CircleAvatar(
-                    radius: 20,
-                    backgroundColor: AppColors.secondary,
-                    backgroundImage: _partnerPhotoURL != null
-                        ? NetworkImage(_partnerPhotoURL!)
-                        : null,
-                    child: _partnerPhotoURL == null
-                        ? Text(_partnerInitial,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold))
-                        : null,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  leading: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundColor: AppColors.secondary,
+                        backgroundImage: _partnerPhotoURL != null
+                            ? NetworkImage(_partnerPhotoURL!)
+                            : null,
+                        child: _partnerPhotoURL == null
+                            ? Text(_partnerInitial,
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold))
+                            : null,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: AppColors.success,
+                            shape: BoxShape.circle,
+                            border:
+                                Border.all(color: Colors.white, width: 1.5),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   title: Text(
                     _partnerFullName.isNotEmpty
@@ -313,7 +340,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // ── PARAMÈTRES ────────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
               child: Text(l.settingsSection,
                   style: const TextStyle(
                       fontSize: 11,
@@ -379,7 +406,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
 
             // ── SIGN OUT ──────────────────────────────────────────────
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
@@ -399,13 +426,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             const Text(
               'WePact v1.0.0',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: AppColors.textGrey),
+              style: TextStyle(fontSize: 11, color: AppColors.textGrey),
             ),
-            const SizedBox(height: 32),
+            SizedBox(
+                height: 24 + MediaQuery.of(context).padding.bottom),
           ],
         ),
       ),
@@ -416,11 +444,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Text(value,
               style: const TextStyle(
-                  fontSize: 22,
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Colors.white)),
           Text(label,
-              style: const TextStyle(fontSize: 11, color: Colors.white70)),
+              style: TextStyle(
+                  fontSize: 10, color: Colors.white.withAlpha(191))),
         ],
       );
 
