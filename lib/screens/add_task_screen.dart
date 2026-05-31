@@ -26,6 +26,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   final _descController = TextEditingController();
   String _selectedCategory = 'Maison';
   DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
   bool _isLoading = false;
 
   @override
@@ -45,8 +46,19 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     if (picked != null) setState(() => _selectedDate = picked);
   }
 
+  Future<void> _pickTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime ?? TimeOfDay.now(),
+    );
+    if (picked != null) setState(() => _selectedTime = picked);
+  }
+
   String _formatDate(DateTime d, AppLocalizations l) =>
       '${d.day} ${l.monthsShort[d.month - 1]} ${d.year}';
+
+  String _formatTime(TimeOfDay t) =>
+      '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 
   void _showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -77,6 +89,14 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         return;
       }
       final ids = [user.uid, partnerId]..sort();
+      Timestamp? dueTs;
+      if (_selectedDate != null) {
+        final combined = DateTime(
+          _selectedDate!.year, _selectedDate!.month, _selectedDate!.day,
+          _selectedTime?.hour ?? 0, _selectedTime?.minute ?? 0,
+        );
+        dueTs = Timestamp.fromDate(combined);
+      }
       await FirebaseFirestore.instance.collection('pacts').add({
         'coupleId': ids.join('_'),
         'createdBy': user.uid,
@@ -85,9 +105,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         'category': _categories[_selectedCategory] ?? '💳',
         'type': 'task',
         'status': 'pending',
-        'dueDate': _selectedDate != null
-            ? Timestamp.fromDate(_selectedDate!)
-            : null,
+        'dueDate': dueTs,
         'createdAt': Timestamp.now(),
       });
       if (!mounted) return;
@@ -227,6 +245,43 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                         : l.chooseDate,
                     style: TextStyle(
                         color: _selectedDate != null
+                            ? AppColors.textDark
+                            : AppColors.textGrey,
+                        fontSize: 14),
+                  ),
+                ]),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            Text(
+              l.isFr ? 'Heure (optionnel)' : 'Time (optional)',
+              style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDark),
+            ),
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: _pickTime,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: AppColors.textGrey.withAlpha(76)),
+                ),
+                child: Row(children: [
+                  const Icon(Icons.access_time,
+                      color: AppColors.primary, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    _selectedTime != null
+                        ? _formatTime(_selectedTime!)
+                        : (l.isFr ? 'Choisir une heure' : 'Choose a time'),
+                    style: TextStyle(
+                        color: _selectedTime != null
                             ? AppColors.textDark
                             : AppColors.textGrey,
                         fontSize: 14),

@@ -464,7 +464,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              // ── ORANGE BANNER ────────────────────────────────
+              // ── ORANGE BANNER / MOTIVATING MESSAGE ──────────
               if (_pendingForMeCount > 0)
                 GestureDetector(
                   onTap: () => widget.onTabChange?.call(2),
@@ -492,6 +492,26 @@ class _HomeScreenState extends State<HomeScreen> {
                       const Icon(Icons.chevron_right,
                           color: AppColors.secondary),
                     ]),
+                  ),
+                )
+              else
+                Container(
+                  margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: AppColors.purpleLight,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      '✨ Tout est à jour ! Profitez de votre temps ensemble 💜',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 14,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w500),
+                    ),
                   ),
                 ),
 

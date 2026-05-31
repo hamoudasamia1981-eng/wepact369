@@ -175,10 +175,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     fontWeight: FontWeight.bold,
                     color: AppColors.textDark)),
             const SizedBox(height: 8),
-            const TextField(
+            TextField(
+              controller: _amountController,
               keyboardType: TextInputType.numberWithOptions(
                   decimal: true),
-              decoration: InputDecoration(hintText: '0,00'),
+              decoration: const InputDecoration(hintText: '0,00'),
             ),
             const SizedBox(height: 20),
 

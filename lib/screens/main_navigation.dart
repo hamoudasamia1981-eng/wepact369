@@ -174,13 +174,17 @@ class _MainNavigationState extends State<MainNavigation> {
 
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: _screens),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreationSheet(context),
-        backgroundColor: AppColors.primary,
-        elevation: 4,
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
+      floatingActionButton: SizedBox(
+        width: 50,
+        height: 50,
+        child: FloatingActionButton(
+          onPressed: () => _showCreationSheet(context),
+          backgroundColor: AppColors.primary,
+          elevation: 4,
+          child: const Icon(Icons.add, color: Colors.white, size: 22),
+        ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (i) => setState(() => _currentIndex = i),

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../config/app_localizations.dart';
 import '../theme/app_colors.dart';
+import 'pact_detail_screen.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -487,8 +488,21 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 ),
                               )
                             else
-                              ...selectedPacts
-                                  .map((p) => _buildPactCard(p, l)),
+                              ...selectedPacts.map((p) => GestureDetector(
+                                    onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => PactDetailScreen(
+                                          docId: p.id,
+                                          data: p.data(),
+                                          currentUid: _currentUid,
+                                          partnerFirstName:
+                                              _partnerFirstName,
+                                        ),
+                                      ),
+                                    ),
+                                    child: _buildPactCard(p, l),
+                                  )),
                             const SizedBox(height: 16),
                           ],
                         ),

@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../config/app_localizations.dart';
 import '../theme/app_colors.dart';
+import 'add_initiative_screen.dart';
+import 'add_task_screen.dart';
 
 class PactsScreen extends StatefulWidget {
   const PactsScreen({super.key});
@@ -160,6 +162,64 @@ class PactsScreenState extends State<PactsScreen>
           ]),
         );
     }
+  }
+
+  void _showAddPactSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            ListTile(
+              leading: const Text('📋',
+                  style: TextStyle(fontSize: 28)),
+              title: const Text('Tâche',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const AddTaskScreen()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Text('🌟',
+                  style: TextStyle(fontSize: 28)),
+              title: const Text('Initiative',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const AddInitiativeScreen()),
+                );
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _updateStatus(String docId, String status) async {
@@ -416,12 +476,44 @@ class PactsScreenState extends State<PactsScreen>
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
+      body: Stack(
         children: [
-          _buildTab('accepted', l),
-          _buildTab('pending', l),
-          _buildTab('declined', l),
+          TabBarView(
+            controller: _tabController,
+            children: [
+              _buildTab('accepted', l),
+              _buildTab('pending', l),
+              _buildTab('declined', l),
+            ],
+          ),
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 16,
+            child: GestureDetector(
+              onTap: () => _showAddPactSheet(context),
+              child: Container(
+                height: 56,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF7C3AED), Color(0xFFFF8C00)],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Center(
+                  child: Text(
+                    '+ Ajouter un pacte',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
