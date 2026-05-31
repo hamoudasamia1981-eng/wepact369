@@ -193,6 +193,17 @@ class _MainNavigationState extends State<MainNavigation> {
         type: BottomNavigationBarType.fixed,
         backgroundColor: AppColors.white,
         elevation: 8,
+        iconSize: 24,
+        selectedFontSize: 11,
+        unselectedFontSize: 10,
+        selectedLabelStyle: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w400,
+        ),
         items: navItems,
       ),
     );
