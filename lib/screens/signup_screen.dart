@@ -216,6 +216,11 @@ class _SignupScreenState extends State<SignupScreen> {
                   controller: _prenomController,
                   textCapitalization: TextCapitalization.words,
                   textInputAction: TextInputAction.next,
+                  style: const TextStyle(
+                      color: AppColors.textDark,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500),
+                  cursorColor: AppColors.primary,
                   decoration: InputDecoration(
                     labelText: l.firstNameLabel,
                     prefixIcon: const Icon(Icons.person_outline),
@@ -229,6 +234,11 @@ class _SignupScreenState extends State<SignupScreen> {
                   controller: _nomController,
                   textCapitalization: TextCapitalization.words,
                   textInputAction: TextInputAction.next,
+                  style: const TextStyle(
+                      color: AppColors.textDark,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500),
+                  cursorColor: AppColors.primary,
                   decoration: InputDecoration(
                     labelText: l.lastNameLabel,
                     prefixIcon: const Icon(Icons.person_outline),
@@ -242,6 +252,11 @@ class _SignupScreenState extends State<SignupScreen> {
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
+                  style: const TextStyle(
+                      color: AppColors.textDark,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500),
+                  cursorColor: AppColors.primary,
                   decoration: InputDecoration(
                     labelText: l.emailLabel,
                     prefixIcon: const Icon(Icons.email_outlined),
@@ -275,6 +290,11 @@ class _SignupScreenState extends State<SignupScreen> {
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   textInputAction: TextInputAction.next,
+                  style: const TextStyle(
+                      color: AppColors.textDark,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500),
+                  cursorColor: AppColors.primary,
                   decoration: InputDecoration(
                     labelText: l.passwordLabel,
                     prefixIcon: const Icon(Icons.lock_outline),
@@ -298,6 +318,11 @@ class _SignupScreenState extends State<SignupScreen> {
                   obscureText: _obscureConfirm,
                   textInputAction: TextInputAction.done,
                   onFieldSubmitted: (_) => _submit(),
+                  style: const TextStyle(
+                      color: AppColors.textDark,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500),
+                  cursorColor: AppColors.primary,
                   decoration: InputDecoration(
                     labelText: l.confirmPasswordLabel,
                     prefixIcon: const Icon(Icons.lock_outline),

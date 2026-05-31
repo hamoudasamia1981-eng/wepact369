@@ -48,6 +48,11 @@ class AppTheme {
           type: BottomNavigationBarType.fixed,
           elevation: 8,
         ),
+        textSelectionTheme: const TextSelectionThemeData(
+          cursorColor: AppColors.primary,
+          selectionColor: Color(0x337C3AED),
+          selectionHandleColor: AppColors.primary,
+        ),
         snackBarTheme: SnackBarThemeData(
           backgroundColor: const Color(0xFF2D2D44),
           contentTextStyle:
@@ -209,9 +214,17 @@ class AppTheme {
             borderSide: const BorderSide(color: AppColors.error, width: 2),
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          hintStyle: GoogleFonts.poppins(color: AppColors.textGrey, fontSize: 14),
-          labelStyle: GoogleFonts.poppins(color: AppColors.textGrey, fontSize: 14),
-          errorStyle: GoogleFonts.poppins(color: AppColors.error, fontSize: 12),
+          hintStyle: GoogleFonts.poppins(
+              color: const Color(0xFFBDBDBD), fontSize: 14),
+          labelStyle:
+              GoogleFonts.poppins(color: AppColors.textGrey, fontSize: 14),
+          errorStyle:
+              GoogleFonts.poppins(color: AppColors.error, fontSize: 12),
+        ),
+        textSelectionTheme: const TextSelectionThemeData(
+          cursorColor: AppColors.primary,
+          selectionColor: Color(0x337C3AED),
+          selectionHandleColor: AppColors.primary,
         ),
         cardTheme: CardThemeData(
           color: AppColors.white,

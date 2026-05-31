@@ -139,6 +139,11 @@ class _InvitePartnerScreenState extends State<InvitePartnerScreen> {
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.done,
                   onSubmitted: (_) => _sendInvitation(),
+                  style: const TextStyle(
+                      color: AppColors.textDark,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500),
+                  cursorColor: AppColors.primary,
                   decoration: InputDecoration(
                     hintText: l.partnerEmailLabel,
                     prefixIcon: const Icon(Icons.email_outlined),

@@ -207,8 +207,12 @@ class _AddInitiativeScreenState extends State<AddInitiativeScreen> {
             TextField(
               controller: _titleController,
               textCapitalization: TextCapitalization.sentences,
-              decoration:
-                  InputDecoration(hintText: l.initiativeHint),
+              style: const TextStyle(
+                  color: AppColors.textDark,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500),
+              cursorColor: AppColors.primary,
+              decoration: InputDecoration(hintText: l.initiativeHint),
             ),
             const SizedBox(height: 20),
 
@@ -221,8 +225,13 @@ class _AddInitiativeScreenState extends State<AddInitiativeScreen> {
             TextField(
               controller: _descController,
               maxLines: 4,
-              decoration: InputDecoration(
-                  hintText: l.initiativeDescHint),
+              style: const TextStyle(
+                  color: AppColors.textDark,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500),
+              cursorColor: AppColors.primary,
+              decoration:
+                  InputDecoration(hintText: l.initiativeDescHint),
             ),
             const SizedBox(height: 20),
 
@@ -327,10 +336,15 @@ class _AddInitiativeScreenState extends State<AddInitiativeScreen> {
             const SizedBox(height: 8),
             TextField(
               controller: _locationController,
+              style: const TextStyle(
+                  color: AppColors.textDark,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500),
+              cursorColor: AppColors.primary,
               decoration: InputDecoration(
                 hintText: l.locationHint,
-                prefixIcon:
-                    const Icon(Icons.location_on, color: AppColors.secondary),
+                prefixIcon: const Icon(Icons.location_on,
+                    color: AppColors.secondary),
               ),
             ),
             const SizedBox(height: 32),

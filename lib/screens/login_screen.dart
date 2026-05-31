@@ -152,6 +152,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
+                    style: const TextStyle(
+                        color: AppColors.textDark,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500),
+                    cursorColor: AppColors.primary,
                     decoration: InputDecoration(
                       labelText: l.emailLabel,
                       prefixIcon: const Icon(Icons.email_outlined),
@@ -163,6 +168,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     obscureText: _obscurePassword,
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) => _signIn(),
+                    style: const TextStyle(
+                        color: AppColors.textDark,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500),
+                    cursorColor: AppColors.primary,
                     decoration: InputDecoration(
                       labelText: l.passwordLabel,
                       prefixIcon: const Icon(Icons.lock_outline),

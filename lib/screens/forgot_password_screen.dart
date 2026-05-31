@@ -121,6 +121,11 @@ class _FormView extends StatelessWidget {
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.done,
             onFieldSubmitted: (_) => onSubmit(),
+            style: const TextStyle(
+                color: AppColors.textDark,
+                fontSize: 16,
+                fontWeight: FontWeight.w500),
+            cursorColor: AppColors.primary,
             decoration: InputDecoration(
               labelText: l.emailLabel,
               prefixIcon: const Icon(Icons.email_outlined),

@@ -304,6 +304,11 @@ class _LabeledField extends StatelessWidget {
     return TextField(
       controller: controller,
       textCapitalization: TextCapitalization.words,
+      style: const TextStyle(
+          color: AppColors.textDark,
+          fontSize: 16,
+          fontWeight: FontWeight.w500),
+      cursorColor: AppColors.primary,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: const Icon(Icons.person_outline, size: 20),

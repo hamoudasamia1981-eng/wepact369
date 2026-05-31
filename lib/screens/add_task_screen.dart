@@ -200,8 +200,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             TextField(
               controller: _titleController,
               textCapitalization: TextCapitalization.sentences,
-              decoration:
-                  InputDecoration(hintText: l.taskHint),
+              style: const TextStyle(
+                  color: AppColors.textDark,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500),
+              cursorColor: AppColors.primary,
+              decoration: InputDecoration(hintText: l.taskHint),
             ),
             const SizedBox(height: 20),
 
@@ -214,8 +218,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             TextField(
               controller: _descController,
               maxLines: 4,
-              decoration: InputDecoration(
-                  hintText: l.descriptionHint),
+              style: const TextStyle(
+                  color: AppColors.textDark,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500),
+              cursorColor: AppColors.primary,
+              decoration: InputDecoration(hintText: l.descriptionHint),
             ),
             const SizedBox(height: 20),
 

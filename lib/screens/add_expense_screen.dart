@@ -164,8 +164,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             TextField(
               controller: _titleController,
               textCapitalization: TextCapitalization.sentences,
-              decoration: InputDecoration(
-                  hintText: l.titleHint),
+              style: const TextStyle(
+                  color: AppColors.textDark,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500),
+              cursorColor: AppColors.primary,
+              decoration: InputDecoration(hintText: l.titleHint),
             ),
             const SizedBox(height: 20),
 
@@ -177,8 +181,13 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             const SizedBox(height: 8),
             TextField(
               controller: _amountController,
-              keyboardType: TextInputType.numberWithOptions(
-                  decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              style: const TextStyle(
+                  color: AppColors.textDark,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500),
+              cursorColor: AppColors.primary,
               decoration: const InputDecoration(hintText: '0,00'),
             ),
             const SizedBox(height: 20),
