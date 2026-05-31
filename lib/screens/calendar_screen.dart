@@ -233,8 +233,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         fontWeight: FontWeight.bold,
                         color: AppColors.textDark)),
                 Text(l.proposedBy(proposerName),
-                    style: const TextStyle(
-                        fontSize: 12, color: AppColors.primary)),
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: createdBy == _currentUid
+                            ? AppColors.meColor
+                            : AppColors.partnerColor)),
               ],
             ),
           ),

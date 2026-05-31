@@ -14,4 +14,6 @@ class AppColors {
   static const Color cardShadow = Color(0x14000000);
   static const Color purpleLight = Color(0xFFEDE9FE);
   static const Color orangeLight = Color(0xFFFEF3C7);
+  static const Color meColor = Color(0xFF3B82F6);     // current-user blue
+  static const Color partnerColor = Color(0xFFFF8C00); // partner orange = secondary
 }

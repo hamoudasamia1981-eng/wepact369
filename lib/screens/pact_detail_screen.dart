@@ -52,6 +52,9 @@ class _PactDetailScreenState extends State<PactDetailScreen> {
     final proposerName = createdBy == widget.currentUid
         ? l.youLabel
         : (widget.partnerFirstName ?? l.partnerLabel);
+    final proposerColor = createdBy == widget.currentUid
+        ? AppColors.meColor
+        : AppColors.partnerColor;
     final bgColor =
         type == 'initiative' ? AppColors.orangeLight : AppColors.purpleLight;
     final isFromPartner = createdBy != widget.currentUid;
@@ -136,7 +139,7 @@ class _PactDetailScreenState extends State<PactDetailScreen> {
             ),
             const SizedBox(height: 24),
 
-            _infoRow(Icons.person, l.proposedBy(proposerName), AppColors.primary),
+            _infoRow(Icons.person, l.proposedBy(proposerName), proposerColor),
 
             if (dateText.isNotEmpty) ...[
               const SizedBox(height: 12),

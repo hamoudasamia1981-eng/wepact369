@@ -286,9 +286,11 @@ class PactsScreenState extends State<PactsScreen>
                               fontWeight: FontWeight.bold,
                               color: AppColors.textDark)),
                       Text(l.proposedBy(proposerName),
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 13,
-                              color: AppColors.primary)),
+                              color: createdBy == _currentUid
+                                  ? AppColors.meColor
+                                  : AppColors.partnerColor)),
                       if (description.isNotEmpty)
                         Text(description,
                             style: const TextStyle(

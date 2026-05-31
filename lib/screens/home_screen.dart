@@ -467,7 +467,7 @@ class _HomeScreenState extends State<HomeScreen> {
               // ── ORANGE BANNER / MOTIVATING MESSAGE ──────────
               if (_pendingForMeCount > 0)
                 GestureDetector(
-                  onTap: () => widget.onTabChange?.call(2),
+                  onTap: () => widget.onNavigateToPacts?.call(1),
                   child: Container(
                     margin: const EdgeInsets.all(16),
                     padding: const EdgeInsets.all(16),
@@ -539,7 +539,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Column(children: [
                       CircleAvatar(
                         radius: 20,
-                        backgroundColor: Colors.white.withAlpha(76),
+                        backgroundColor: AppColors.meColor,
                         child: Text(myInitial,
                             style: const TextStyle(
                                 color: Colors.white,
@@ -561,7 +561,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           value: myProgress,
                           backgroundColor: Colors.white.withAlpha(76),
                           valueColor: const AlwaysStoppedAnimation<Color>(
-                              Colors.white),
+                              AppColors.meColor),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -706,52 +706,64 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ? l.youLabel
                                 : (_partnerFirstName ?? l.partnerLabel))
                             : '${item.createdByMe ? (_firstName ?? '') : (_partnerFirstName ?? '')} • ${item.expenseCurrency ?? currency}${item.expenseAmount?.toStringAsFixed(2) ?? ''}';
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: const [
-                              BoxShadow(
-                                  color: AppColors.cardShadow,
-                                  blurRadius: 6,
-                                  offset: Offset(0, 2))
-                            ],
-                          ),
-                          child: Row(children: [
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                  color: cardBgColor,
-                                  borderRadius:
-                                      BorderRadius.circular(10)),
-                              child: Center(
-                                  child: Text(item.emoji,
-                                      style: const TextStyle(
-                                          fontSize: 20))),
+                        final subtitleColor = item.type == 'pact'
+                            ? (item.createdByMe
+                                ? AppColors.meColor
+                                : AppColors.partnerColor)
+                            : AppColors.primary;
+                        return GestureDetector(
+                          onTap: item.type == 'pact'
+                              ? () => item.status == 'pending'
+                                  ? widget.onNavigateToPacts?.call(1)
+                                  : widget.onTabChange?.call(2)
+                              : null,
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: const [
+                                BoxShadow(
+                                    color: AppColors.cardShadow,
+                                    blurRadius: 6,
+                                    offset: Offset(0, 2))
+                              ],
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
-                                children: [
-                                  Text(item.title,
-                                      style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.textDark)),
-                                  Text(subtitle,
-                                      style: const TextStyle(
-                                          fontSize: 13,
-                                          color: AppColors.primary)),
-                                ],
+                            child: Row(children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                    color: cardBgColor,
+                                    borderRadius:
+                                        BorderRadius.circular(10)),
+                                child: Center(
+                                    child: Text(item.emoji,
+                                        style: const TextStyle(
+                                            fontSize: 20))),
                               ),
-                            ),
-                            _buildStatusBadge(item.status, l),
-                          ]),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Text(item.title,
+                                        style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.textDark)),
+                                    Text(subtitle,
+                                        style: TextStyle(
+                                            fontSize: 13,
+                                            color: subtitleColor)),
+                                  ],
+                                ),
+                              ),
+                              _buildStatusBadge(item.status, l),
+                            ]),
+                          ),
                         );
                       })),
                     const SizedBox(height: 16),

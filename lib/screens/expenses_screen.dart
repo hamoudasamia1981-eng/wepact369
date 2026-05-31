@@ -464,7 +464,7 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                                         CircleAvatar(
                                           radius: 18,
                                           backgroundColor:
-                                              Colors.white.withAlpha(76),
+                                              AppColors.meColor,
                                           child: Text(myI,
                                               style: const TextStyle(
                                                   color: Colors.white,
@@ -665,6 +665,9 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                                     final dateStr = dateTs != null
                                         ? _formatDate(dateTs, l)
                                         : '';
+                                    final ownerColor = by == _currentUid
+                                        ? AppColors.meColor
+                                        : AppColors.partnerColor;
 
                                     return Container(
                                       margin: const EdgeInsets.only(
@@ -718,7 +721,7 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                                                 CircleAvatar(
                                                   radius: 8,
                                                   backgroundColor:
-                                                      AppColors.primary,
+                                                      ownerColor,
                                                   child: Text(
                                                     owner.isNotEmpty
                                                         ? owner[0]
@@ -732,10 +735,9 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                                                 ),
                                                 const SizedBox(width: 4),
                                                 Text(owner,
-                                                    style: const TextStyle(
+                                                    style: TextStyle(
                                                         fontSize: 12,
-                                                        color: AppColors
-                                                            .primary)),
+                                                        color: ownerColor)),
                                               ]),
                                             ],
                                           ),
@@ -747,12 +749,11 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                                           children: [
                                             Text(
                                                 '$cur${amt.toStringAsFixed(2)}',
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                     fontSize: 16,
                                                     fontWeight:
                                                         FontWeight.bold,
-                                                    color:
-                                                        AppColors.primary)),
+                                                    color: ownerColor)),
                                             if (by == _currentUid)
                                               SizedBox(
                                                 width: 32,
