@@ -22,9 +22,26 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
 
-  // Keys declared at State level — never recreated across builds.
   final _pactsKey = GlobalKey<PactsScreenState>();
   final _expensesKey = GlobalKey<ExpensesScreenState>();
+
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      HomeScreen(
+        onTabChange: (index) => setState(() => _currentIndex = index),
+        onNavigateToPacts: _goToPactsTab,
+        onNavigateToExpenses: _goToExpensesWithFilter,
+      ),
+      ExpensesScreen(key: _expensesKey),
+      PactsScreen(key: _pactsKey),
+      const CalendarScreen(),
+      const ProfileScreen(),
+    ];
+  }
 
   void _goToPactsTab(int tabIndex) {
     setState(() => _currentIndex = 2);
@@ -155,22 +172,8 @@ class _MainNavigationState extends State<MainNavigation> {
       ),
     ];
 
-    // Screens built here so Flutter's element reconciliation matches them
-    // correctly by key (keyed) or position (unkeyed) on every rebuild.
-    final screens = [
-      HomeScreen(
-        onTabChange: (index) => setState(() => _currentIndex = index),
-        onNavigateToPacts: _goToPactsTab,
-        onNavigateToExpenses: _goToExpensesWithFilter,
-      ),
-      ExpensesScreen(key: _expensesKey),
-      PactsScreen(key: _pactsKey),
-      const CalendarScreen(),
-      const ProfileScreen(),
-    ];
-
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: screens),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showCreationSheet(context),
         backgroundColor: AppColors.primary,
