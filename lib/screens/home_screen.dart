@@ -1,7 +1,28 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+
+class _ActivityItem {
+  final String type; // 'pact' or 'expense'
+  final String title;
+  final String subtitle;
+  final String status;
+  final String emoji;
+  final bool isInitiative;
+  final Timestamp? createdAt;
+
+  const _ActivityItem({
+    required this.type,
+    required this.title,
+    required this.subtitle,
+    required this.status,
+    required this.emoji,
+    required this.isInitiative,
+    this.createdAt,
+  });
+}
 
 class HomeScreen extends StatefulWidget {
   final ValueChanged<int>? onTabChange;
@@ -13,28 +34,53 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const _categoryEmojis = <String, String>{
+    'Alimentation': '🛒',
+    'Loyer': '🏠',
+    'Restaurant': '🍴',
+    'Transport': '🚗',
+    'Enfants': '👶',
+    'Maison': '🛋️',
+    'Loisirs': '🎭',
+    'Santé': '💊',
+    'Autre': '💳',
+  };
+
   final _currentUser = FirebaseAuth.instance.currentUser;
+  final _db = FirebaseFirestore.instance;
 
   String? _firstName;
   String? _partnerFirstName;
   String? _partnerPhotoURL;
   String? _partnerId;
-  String? _coupleId;
   String _currency = '£';
 
   double _myTotal = 0;
   double _partnerTotal = 0;
-
   int _proposedCount = 0;
   int _acceptedCount = 0;
   int _pendingForMeCount = 0;
 
   bool _isLoading = true;
 
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _pactsSub;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _expensesSub;
+
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> _allPacts = [];
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> _allExpenses = [];
+  List<_ActivityItem> _recentActivity = [];
+
   @override
   void initState() {
     super.initState();
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _pactsSub?.cancel();
+    _expensesSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -44,10 +90,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     try {
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(_currentUser.uid)
-          .get();
+      final userDoc =
+          await _db.collection('users').doc(_currentUser.uid).get();
       if (!mounted) return;
 
       final userData = userDoc.data();
@@ -55,90 +99,139 @@ class _HomeScreenState extends State<HomeScreen> {
       final firstName = userData?['firstName'] as String? ?? '';
       final currency = userData?['currency'] as String? ?? '£';
 
-      setState(() {
-        _firstName = firstName;
-        _partnerId = partnerId;
-        _currency = currency;
-      });
-
       if (partnerId == null) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _firstName = firstName;
+          _partnerId = null;
+          _currency = currency;
+          _isLoading = false;
+        });
         return;
       }
+
+      final partnerDoc =
+          await _db.collection('users').doc(partnerId).get();
+      if (!mounted) return;
 
       final uid = _currentUser.uid;
       final ids = [uid, partnerId]..sort();
       final coupleId = ids.join('_');
 
-      final now = DateTime.now();
-      final firstOfMonthTs =
-          Timestamp.fromDate(DateTime(now.year, now.month, 1));
-
-      final results = await Future.wait<dynamic>([
-        FirebaseFirestore.instance.collection('users').doc(partnerId).get(),
-        FirebaseFirestore.instance
-            .collection('expenses')
-            .where('coupleId', isEqualTo: coupleId)
-            .where('date', isGreaterThanOrEqualTo: firstOfMonthTs)
-            .get(),
-        FirebaseFirestore.instance
-            .collection('pacts')
-            .where('coupleId', isEqualTo: coupleId)
-            .where('status', isEqualTo: 'pending')
-            .where('createdBy', isEqualTo: uid)
-            .get(),
-        FirebaseFirestore.instance
-            .collection('pacts')
-            .where('coupleId', isEqualTo: coupleId)
-            .where('status', isEqualTo: 'accepted')
-            .get(),
-        FirebaseFirestore.instance
-            .collection('pacts')
-            .where('coupleId', isEqualTo: coupleId)
-            .where('status', isEqualTo: 'pending')
-            .where('createdBy', isEqualTo: partnerId)
-            .get(),
-      ]);
-
-      if (!mounted) return;
-
-      final partnerData =
-          (results[0] as DocumentSnapshot<Map<String, dynamic>>).data();
-      final expenseDocs =
-          (results[1] as QuerySnapshot<Map<String, dynamic>>).docs;
-      final proposedDocs =
-          (results[2] as QuerySnapshot<Map<String, dynamic>>).docs;
-      final acceptedDocs =
-          (results[3] as QuerySnapshot<Map<String, dynamic>>).docs;
-      final pendingForMeDocs =
-          (results[4] as QuerySnapshot<Map<String, dynamic>>).docs;
-
-      double myTotal = 0;
-      double partnerTotal = 0;
-      for (final doc in expenseDocs) {
-        final amount = (doc.data()['amount'] as num?)?.toDouble() ?? 0;
-        if (doc.data()['createdBy'] == uid) {
-          myTotal += amount;
-        } else {
-          partnerTotal += amount;
-        }
-      }
-
       setState(() {
+        _firstName = firstName;
+        _partnerId = partnerId;
+        _currency = currency;
         _partnerFirstName =
-            partnerData?['firstName'] as String? ?? 'Partenaire';
-        _partnerPhotoURL = partnerData?['photoURL'] as String?;
-        _coupleId = coupleId;
-        _myTotal = myTotal;
-        _partnerTotal = partnerTotal;
-        _proposedCount = proposedDocs.length;
-        _acceptedCount = acceptedDocs.length;
-        _pendingForMeCount = pendingForMeDocs.length;
+            partnerDoc.data()?['firstName'] as String? ?? 'Partenaire';
+        _partnerPhotoURL = partnerDoc.data()?['photoURL'] as String?;
         _isLoading = false;
+      });
+
+      // Single-field queries only — avoids composite index requirements.
+      // All filtering and counting done client-side.
+      _pactsSub = _db
+          .collection('pacts')
+          .where('coupleId', isEqualTo: coupleId)
+          .snapshots()
+          .listen((snap) {
+        if (!mounted) return;
+        _allPacts = snap.docs;
+        _recompute(uid, partnerId);
+      });
+
+      _expensesSub = _db
+          .collection('expenses')
+          .where('coupleId', isEqualTo: coupleId)
+          .snapshots()
+          .listen((snap) {
+        if (!mounted) return;
+        _allExpenses = snap.docs;
+        _recompute(uid, partnerId);
       });
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _recompute(String uid, String partnerId) {
+    // Expense totals (all-time)
+    double myTotal = 0;
+    double partnerTotal = 0;
+    for (final doc in _allExpenses) {
+      final amount = (doc.data()['amount'] as num?)?.toDouble() ?? 0;
+      if (doc.data()['createdBy'] == uid) {
+        myTotal += amount;
+      } else {
+        partnerTotal += amount;
+      }
+    }
+
+    // Pacts counts (client-side filtering)
+    final proposedCount = _allPacts
+        .where((d) =>
+            d.data()['status'] == 'pending' &&
+            d.data()['createdBy'] == uid)
+        .length;
+    final acceptedCount =
+        _allPacts.where((d) => d.data()['status'] == 'accepted').length;
+    final pendingForMeCount = _allPacts
+        .where((d) =>
+            d.data()['status'] == 'pending' &&
+            d.data()['createdBy'] == partnerId)
+        .length;
+
+    // Combined recent activity (pacts + expenses), newest first, limit 5
+    final items = <_ActivityItem>[];
+
+    for (final doc in _allPacts) {
+      final data = doc.data();
+      final createdBy = data['createdBy'] as String? ?? '';
+      final proposerName =
+          createdBy == uid ? 'Vous' : (_partnerFirstName ?? 'Partenaire');
+      items.add(_ActivityItem(
+        type: 'pact',
+        title: data['title'] as String? ?? 'Sans titre',
+        subtitle: 'Proposé par $proposerName',
+        status: data['status'] as String? ?? 'pending',
+        emoji: data['category'] as String? ?? '📋',
+        isInitiative: (data['type'] as String?) == 'initiative',
+        createdAt: data['createdAt'] as Timestamp?,
+      ));
+    }
+
+    for (final doc in _allExpenses) {
+      final data = doc.data();
+      final cat = data['category'] as String? ?? 'Autre';
+      final cur = data['currency'] as String? ?? _currency;
+      final amount = (data['amount'] as num?)?.toDouble() ?? 0;
+      final owner = (data['createdBy'] as String? ?? '') == uid
+          ? (_firstName ?? 'Vous')
+          : (_partnerFirstName ?? 'Partenaire');
+      items.add(_ActivityItem(
+        type: 'expense',
+        title: data['title'] as String? ?? 'Dépense',
+        subtitle: '$owner • $cur${amount.toStringAsFixed(2)}',
+        status: 'expense',
+        emoji: _categoryEmojis[cat] ?? '💳',
+        isInitiative: false,
+        createdAt: data['createdAt'] as Timestamp?,
+      ));
+    }
+
+    items.sort((a, b) {
+      final ta = a.createdAt?.millisecondsSinceEpoch ?? 0;
+      final tb = b.createdAt?.millisecondsSinceEpoch ?? 0;
+      return tb.compareTo(ta);
+    });
+
+    setState(() {
+      _myTotal = myTotal;
+      _partnerTotal = partnerTotal;
+      _proposedCount = proposedCount;
+      _acceptedCount = acceptedCount;
+      _pendingForMeCount = pendingForMeCount;
+      _recentActivity = items.take(5).toList();
+    });
   }
 
   String get _greeting {
@@ -198,6 +291,29 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(
                   fontSize: 11,
                   color: AppColors.error,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        );
+      case 'expense':
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: AppColors.purpleLight,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.receipt_long, size: 12, color: AppColors.primary),
+              SizedBox(width: 4),
+              Text(
+                'Dépense',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: AppColors.primary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -360,38 +476,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  _firstName ?? '',
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.textDark,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Image.asset(
-                                'assets/images/logo.png',
-                                width: 22,
-                                height: 22,
-                              ),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: Text(
-                                  _partnerFirstName ?? '',
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.textDark,
-                                  ),
-                                ),
-                              ),
-                            ],
+                          Text(
+                            '${_firstName ?? ''} 💜 ${_partnerFirstName ?? ''}',
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textDark,
+                            ),
                           ),
                           if (_pendingForMeCount > 0) ...[
                             const SizedBox(height: 4),
@@ -536,8 +628,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           const Text(
                             'Total',
-                            style: TextStyle(
-                                fontSize: 12, color: Colors.white70),
+                            style:
+                                TextStyle(fontSize: 12, color: Colors.white70),
                           ),
                           Text(
                             '$_currency${totalAmount.toStringAsFixed(2)}',
@@ -663,123 +755,81 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    if (_coupleId != null)
-                      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                        stream: FirebaseFirestore.instance
-                            .collection('pacts')
-                            .where('coupleId', isEqualTo: _coupleId)
-                            .orderBy('createdAt', descending: true)
-                            .limit(5)
-                            .snapshots(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const Center(
-                              child: Padding(
-                                padding: EdgeInsets.all(16),
-                                child: CircularProgressIndicator(
-                                    color: AppColors.primary),
-                              ),
-                            );
-                          }
-                          final docs = snapshot.data?.docs ?? [];
-                          if (docs.isEmpty) {
-                            return const Center(
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(vertical: 24),
-                                child: Text(
-                                  'Aucune activité pour le moment',
-                                  style:
-                                      TextStyle(color: AppColors.textGrey),
-                                ),
-                              ),
-                            );
-                          }
-                          return Column(
-                            children: docs.map((doc) {
-                              final data = doc.data();
-                              final type =
-                                  data['type'] as String? ?? 'task';
-                              final category =
-                                  data['category'] as String? ?? '📋';
-                              final title =
-                                  data['title'] as String? ?? 'Sans titre';
-                              final status =
-                                  data['status'] as String? ?? 'pending';
-                              final createdBy =
-                                  data['createdBy'] as String? ?? '';
-                              final proposerName =
-                                  createdBy == _currentUser?.uid
-                                      ? 'Vous'
-                                      : (_partnerFirstName ?? 'Partenaire');
-                              final cardBgColor = type == 'initiative'
-                                  ? AppColors.orangeLight
-                                  : AppColors.purpleLight;
+                    if (_recentActivity.isEmpty)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24),
+                          child: Text(
+                            'Aucune activité pour le moment',
+                            style: TextStyle(color: AppColors.textGrey),
+                          ),
+                        ),
+                      )
+                    else
+                      ...(_recentActivity.map((item) {
+                        final cardBgColor = item.isInitiative
+                            ? AppColors.orangeLight
+                            : AppColors.purpleLight;
 
-                              return Container(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                padding: const EdgeInsets.all(12),
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: AppColors.cardShadow,
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
                                 decoration: BoxDecoration(
-                                  color: AppColors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: AppColors.cardShadow,
-                                      blurRadius: 6,
-                                      offset: Offset(0, 2),
-                                    ),
-                                  ],
+                                  color: cardBgColor,
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                                child: Row(
+                                child: Center(
+                                  child: Text(
+                                    item.emoji,
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
                                   children: [
-                                    Container(
-                                      width: 44,
-                                      height: 44,
-                                      decoration: BoxDecoration(
-                                        color: cardBgColor,
-                                        borderRadius:
-                                            BorderRadius.circular(10),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          category,
-                                          style: const TextStyle(
-                                              fontSize: 20),
-                                        ),
+                                    Text(
+                                      item.title,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.textDark,
                                       ),
                                     ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            title,
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppColors.textDark,
-                                            ),
-                                          ),
-                                          Text(
-                                            'Proposé par $proposerName',
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              color: AppColors.primary,
-                                            ),
-                                          ),
-                                        ],
+                                    Text(
+                                      item.subtitle,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        color: AppColors.primary,
                                       ),
                                     ),
-                                    _buildStatusBadge(status),
                                   ],
                                 ),
-                              );
-                            }).toList(),
-                          );
-                        },
-                      ),
+                              ),
+                              _buildStatusBadge(item.status),
+                            ],
+                          ),
+                        );
+                      })),
                     const SizedBox(height: 16),
                   ],
                 ),

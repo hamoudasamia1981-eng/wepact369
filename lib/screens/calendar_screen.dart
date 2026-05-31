@@ -302,18 +302,21 @@ class _CalendarScreenState extends State<CalendarScreen> {
               ),
             )
           : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              // Single-field query only — no composite index needed.
+              // Month-range filtering is done client-side below.
               stream: FirebaseFirestore.instance
                   .collection('pacts')
                   .where('coupleId', isEqualTo: _coupleId)
-                  .where('dueDate',
-                      isGreaterThanOrEqualTo:
-                          Timestamp.fromDate(firstOfMonth))
-                  .where('dueDate',
-                      isLessThanOrEqualTo:
-                          Timestamp.fromDate(lastOfMonth))
                   .snapshots(),
               builder: (ctx, snap) {
-                final allPacts = snap.data?.docs ?? [];
+                // Filter to focused month client-side
+                final allPacts = (snap.data?.docs ?? []).where((p) {
+                  final due = p.data()['dueDate'] as Timestamp?;
+                  if (due == null) return false;
+                  final d = due.toDate();
+                  return !d.isBefore(firstOfMonth) &&
+                      !d.isAfter(lastOfMonth);
+                }).toList();
                 final days = _buildDays();
 
                 final selectedPacts = allPacts.where((p) {
