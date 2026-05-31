@@ -2,9 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_localizations.dart';
 import '../providers/language_provider.dart';
+import '../providers/settings_provider.dart';
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
 import 'settings_screen.dart';
@@ -20,22 +20,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _partnerFirstName, _partnerLastName, _partnerPhotoURL;
   Timestamp? _partnerSince;
   int _proposedCount = 0, _acceptedCount = 0, _totalCount = 0;
-  bool _darkMode = false;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _loadData();
-    _loadPrefs();
-  }
-
-  Future<void> _loadPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(() {
-      _darkMode = prefs.getBool('darkMode') ?? false;
-    });
   }
 
   Future<void> _loadData() async {
@@ -89,12 +79,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<void> _toggleDarkMode(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('darkMode', value);
-    if (mounted) setState(() => _darkMode = value);
-  }
-
   String _formatDate(Timestamp ts, AppLocalizations l) {
     final d = ts.toDate();
     return '${d.day} ${l.monthsShort[d.month - 1]} ${d.year}';
@@ -139,6 +123,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final langProvider = context.watch<LanguageProvider>();
+    final settings = context.watch<SettingsProvider>();
 
     if (_isLoading) {
       return const Scaffold(
@@ -367,8 +352,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         style: const TextStyle(
                             fontSize: 15, color: AppColors.textDark)),
                     trailing: Switch(
-                      value: _darkMode,
-                      onChanged: _toggleDarkMode,
+                      value: settings.isDark,
+                      onChanged: (v) =>
+                          context.read<SettingsProvider>().setDarkMode(v),
                       activeThumbColor: AppColors.primary,
                     ),
                   ),

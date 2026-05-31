@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../config/app_constants.dart';
 import '../config/app_localizations.dart';
 import '../providers/language_provider.dart';
+import '../providers/settings_provider.dart';
 import '../theme/app_colors.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -14,13 +15,22 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  String _selectedCurrency = AppConstants.defaultCurrency;
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   bool _isLoading = true;
+  bool _savingName = false;
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
+  }
+
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadSettings() async {
@@ -31,28 +41,55 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
     try {
       final doc = await FirebaseFirestore.instance
-          .collection('users').doc(user.uid).get();
+          .collection('users')
+          .doc(user.uid)
+          .get();
       if (!mounted) return;
-      setState(() {
-        _selectedCurrency =
-            doc.data()?['currency'] as String? ?? AppConstants.defaultCurrency;
-        _isLoading = false;
-      });
+      final data = doc.data();
+      final currency =
+          data?['currency'] as String? ?? AppConstants.defaultCurrency;
+      _firstNameController.text = data?['firstName'] as String? ?? '';
+      _lastNameController.text = data?['lastName'] as String? ?? '';
+      // Sync loaded currency to provider so all screens update
+      if (mounted) {
+        context.read<SettingsProvider>().syncCurrency(currency);
+      }
+      setState(() => _isLoading = false);
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  Future<void> _setCurrency(String currency) async {
+  Future<void> _saveName() async {
+    final l = context.read<LanguageProvider>().l10n;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    setState(() => _selectedCurrency = currency);
+    setState(() => _savingName = true);
     try {
       await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
-          .update({'currency': currency});
-    } catch (_) {}
+          .update({
+        'firstName': _firstNameController.text.trim(),
+        'lastName': _lastNameController.text.trim(),
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(l.nameUpdated),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+      ));
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(context.read<LanguageProvider>().l10n.saveError),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _savingName = false);
+    }
   }
 
   Future<void> _setLanguage(String lang) async {
@@ -63,6 +100,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final langCode = context.watch<LanguageProvider>().code;
+    final settings = context.watch<SettingsProvider>();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -86,7 +124,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // DEVISE
+                  // ── NOM ──────────────────────────────────────
+                  Text(l.nameSection,
+                      style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textGrey,
+                          letterSpacing: 1.2)),
+                  const SizedBox(height: 12),
+                  _LabeledField(
+                    label: l.firstNameLabel,
+                    controller: _firstNameController,
+                  ),
+                  const SizedBox(height: 12),
+                  _LabeledField(
+                    label: l.lastNameLabel,
+                    controller: _lastNameController,
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _savingName ? null : _saveName,
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        minimumSize: const Size(0, 48),
+                      ),
+                      child: _savingName
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                  color: Colors.white, strokeWidth: 2))
+                          : Text(l.saveChanges),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // ── DEVISE ───────────────────────────────────
                   Text(l.currencyLabel,
                       style: const TextStyle(
                           fontSize: 16,
@@ -97,14 +173,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     spacing: 8,
                     runSpacing: 8,
                     children: AppConstants.currencies.map((c) {
-                      final sel = _selectedCurrency == c;
+                      final sel = settings.currency == c;
                       return GestureDetector(
-                        onTap: () => _setCurrency(c),
+                        onTap: () =>
+                            context.read<SettingsProvider>().setCurrency(c),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 10),
                           decoration: BoxDecoration(
-                            color: sel ? AppColors.primary : AppColors.white,
+                            color:
+                                sel ? AppColors.primary : AppColors.white,
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color: sel
@@ -125,7 +203,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  // LANGUE
+                  // ── MODE SOMBRE ──────────────────────────────
+                  Text(l.darkModeSection,
+                      style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textGrey,
+                          letterSpacing: 1.2)),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: const [
+                        BoxShadow(
+                            color: AppColors.cardShadow,
+                            blurRadius: 4,
+                            offset: Offset(0, 2))
+                      ],
+                    ),
+                    child: SwitchListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 4),
+                      title: Text(l.darkModeLabel,
+                          style: const TextStyle(
+                              fontSize: 15, color: AppColors.textDark)),
+                      value: settings.isDark,
+                      onChanged: (v) =>
+                          context.read<SettingsProvider>().setDarkMode(v),
+                      activeThumbColor: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // ── LANGUE ───────────────────────────────────
                   Text(l.languageLabel,
                       style: const TextStyle(
                           fontSize: 16,
@@ -134,9 +245,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      Expanded(child: _buildLangCard('fr', '🇫🇷', 'Français', langCode)),
+                      Expanded(
+                          child: _buildLangCard(
+                              'fr', '🇫🇷', 'Français', langCode)),
                       const SizedBox(width: 12),
-                      Expanded(child: _buildLangCard('en', '🇬🇧', 'English', langCode)),
+                      Expanded(
+                          child: _buildLangCard(
+                              'en', '🇬🇧', 'English', langCode)),
                     ],
                   ),
                 ],
@@ -145,7 +260,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildLangCard(String code, String flag, String label, String langCode) {
+  Widget _buildLangCard(
+      String code, String flag, String label, String langCode) {
     final sel = langCode == code;
     return GestureDetector(
       onTap: () => _setLanguage(code),
@@ -155,7 +271,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           color: sel ? AppColors.purpleLight : AppColors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: sel ? AppColors.primary : AppColors.textGrey.withAlpha(80),
+            color: sel
+                ? AppColors.primary
+                : AppColors.textGrey.withAlpha(80),
             width: sel ? 2 : 1,
           ),
         ),
@@ -167,10 +285,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color:
-                        sel ? AppColors.primary : AppColors.textGrey)),
+                    color: sel ? AppColors.primary : AppColors.textGrey)),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _LabeledField extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+
+  const _LabeledField({required this.label, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      textCapitalization: TextCapitalization.words,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: const Icon(Icons.person_outline, size: 20),
       ),
     );
   }

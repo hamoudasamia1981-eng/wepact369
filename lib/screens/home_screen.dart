@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../config/app_localizations.dart';
+import '../providers/settings_provider.dart';
 import '../theme/app_colors.dart';
 
 class _ActivityItem {
@@ -110,6 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _currency = currency;
           _isLoading = false;
         });
+        context.read<SettingsProvider>().syncCurrency(currency);
         return;
       }
 
@@ -129,6 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _partnerPhotoURL = partnerDoc.data()?['photoURL'] as String?;
         _isLoading = false;
       });
+      context.read<SettingsProvider>().syncCurrency(currency);
 
       _pactsSub = _db
           .collection('pacts')
@@ -394,6 +398,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final partnerInitial = (_partnerFirstName?.isNotEmpty == true)
         ? _partnerFirstName![0].toUpperCase()
         : '?';
+    final currency = context.watch<SettingsProvider>().currency;
     final currentMonth =
         l.monthsFull[DateTime.now().month - 1];
 
@@ -524,7 +529,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(_firstName ?? '',
                           style: const TextStyle(
                               fontSize: 12, color: Colors.white)),
-                      Text('$_currency${_myTotal.toStringAsFixed(2)}',
+                      Text('$currency${_myTotal.toStringAsFixed(2)}',
                           style: const TextStyle(
                               fontSize: 18,
                               color: Colors.white,
@@ -549,7 +554,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 style: const TextStyle(
                                     fontSize: 12, color: Colors.white70)),
                             Text(
-                                '$_currency${totalAmount.toStringAsFixed(2)}',
+                                '$currency${totalAmount.toStringAsFixed(2)}',
                                 style: const TextStyle(
                                     fontSize: 22,
                                     color: Colors.white,
@@ -575,7 +580,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           style: const TextStyle(
                               fontSize: 12, color: AppColors.secondary)),
                       Text(
-                          '$_currency${_partnerTotal.toStringAsFixed(2)}',
+                          '$currency${_partnerTotal.toStringAsFixed(2)}',
                           style: const TextStyle(
                               fontSize: 18,
                               color: AppColors.secondary,
@@ -680,7 +685,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ? l.proposedBy(item.createdByMe
                                 ? l.youLabel
                                 : (_partnerFirstName ?? l.partnerLabel))
-                            : '${item.createdByMe ? (_firstName ?? '') : (_partnerFirstName ?? '')} • ${item.expenseCurrency ?? _currency}${item.expenseAmount?.toStringAsFixed(2) ?? ''}';
+                            : '${item.createdByMe ? (_firstName ?? '') : (_partnerFirstName ?? '')} • ${item.expenseCurrency ?? currency}${item.expenseAmount?.toStringAsFixed(2) ?? ''}';
                         return Container(
                           margin: const EdgeInsets.only(bottom: 8),
                           padding: const EdgeInsets.all(12),

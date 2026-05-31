@@ -349,6 +349,11 @@ class AppLocalizations {
   String get settingsTitle => isFr ? 'Paramètres' : 'Settings';
   String get currencyLabel => isFr ? 'Devise' : 'Currency';
   String get languageLabel => isFr ? 'Langue' : 'Language';
+  String get nameSection => isFr ? 'NOM' : 'NAME';
+  String get darkModeSection => isFr ? 'MODE SOMBRE' : 'DARK MODE';
+  String get saveChanges =>
+      isFr ? 'Enregistrer les modifications' : 'Save changes';
+  String get nameUpdated => isFr ? 'Nom mis à jour !' : 'Name updated!';
 
   // ── MAIN NAVIGATION ─────────────────────────────────────────
   String get navHome => isFr ? 'Accueil' : 'Home';

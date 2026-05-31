@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
 import 'providers/language_provider.dart';
+import 'providers/settings_provider.dart';
 import 'screens/forgot_password_screen.dart';
 import 'screens/invite_partner_screen.dart';
 import 'screens/login_screen.dart';
@@ -20,11 +21,19 @@ void main() async {
   );
   final prefs = await SharedPreferences.getInstance();
   final savedLang = prefs.getString('language') ?? 'fr';
+  final savedDark = prefs.getBool('darkMode') ?? false;
+  final savedCurrency = prefs.getString('currency') ?? '£';
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AppAuthProvider()),
         ChangeNotifierProvider(create: (_) => LanguageProvider(savedLang)),
+        ChangeNotifierProvider(
+          create: (_) => SettingsProvider(
+            isDark: savedDark,
+            currency: savedCurrency,
+          ),
+        ),
       ],
       child: const WePact369App(),
     ),
@@ -36,10 +45,13 @@ class WePact369App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeMode = context.watch<SettingsProvider>().themeMode;
     return MaterialApp(
       title: 'WePact',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeMode,
       initialRoute: '/',
       routes: {
         '/': (_) => const SplashScreen(),

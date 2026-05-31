@@ -5,6 +5,59 @@ import 'app_colors.dart';
 class AppTheme {
   AppTheme._();
 
+  static ThemeData get darkTheme => ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.primary,
+          brightness: Brightness.dark,
+          primary: AppColors.primary,
+          secondary: AppColors.secondary,
+          error: AppColors.error,
+        ),
+        scaffoldBackgroundColor: const Color(0xFF0F0F1A),
+        textTheme:
+            GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),
+        appBarTheme: AppBarTheme(
+          backgroundColor: const Color(0xFF1A1A2E),
+          elevation: 0,
+          centerTitle: true,
+          titleTextStyle: GoogleFonts.poppins(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+          iconTheme: const IconThemeData(color: Colors.white70),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14)),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            minimumSize: const Size(double.infinity, 52),
+            textStyle: GoogleFonts.poppins(
+                fontWeight: FontWeight.w600, fontSize: 16),
+          ),
+        ),
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          backgroundColor: const Color(0xFF1A1A2E),
+          selectedItemColor: AppColors.primary,
+          unselectedItemColor: Colors.white38,
+          type: BottomNavigationBarType.fixed,
+          elevation: 8,
+        ),
+        snackBarTheme: SnackBarThemeData(
+          backgroundColor: const Color(0xFF2D2D44),
+          contentTextStyle:
+              GoogleFonts.poppins(color: Colors.white, fontSize: 14),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12)),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+
   static ThemeData get lightTheme => ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(

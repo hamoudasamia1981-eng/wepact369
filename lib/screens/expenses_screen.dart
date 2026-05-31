@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/app_localizations.dart';
 import '../providers/language_provider.dart';
+import '../providers/settings_provider.dart';
 import '../theme/app_colors.dart';
 import 'add_expense_screen.dart';
 
@@ -91,6 +92,7 @@ class ExpensesScreenState extends State<ExpensesScreen> {
             partnerDoc.data()?['firstName'] as String? ?? 'Partenaire';
         _isLoading = false;
       });
+      context.read<SettingsProvider>().syncCurrency(currency);
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -217,6 +219,7 @@ class ExpensesScreenState extends State<ExpensesScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final displayCurrency = context.watch<SettingsProvider>().currency;
 
     if (_isLoading) {
       return const Scaffold(
@@ -474,7 +477,7 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                                                 fontSize: 12,
                                                 color: Colors.white)),
                                         Text(
-                                            '$_currency${myTotal.toStringAsFixed(2)}',
+                                            '$displayCurrency${myTotal.toStringAsFixed(2)}',
                                             style: const TextStyle(
                                                 fontSize: 18,
                                                 color: Colors.white,
@@ -530,7 +533,7 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                                                           FontWeight.bold,
                                                       letterSpacing: 1.2)),
                                               Text(
-                                                  '$_currency${total.toStringAsFixed(2)}',
+                                                  '$displayCurrency${total.toStringAsFixed(2)}',
                                                   style: const TextStyle(
                                                       fontSize: 22,
                                                       color: Colors.white,
@@ -586,7 +589,7 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                                                 fontSize: 12,
                                                 color: AppColors.secondary)),
                                         Text(
-                                            '$_currency${partnerTotal.toStringAsFixed(2)}',
+                                            '$displayCurrency${partnerTotal.toStringAsFixed(2)}',
                                             style: const TextStyle(
                                                 fontSize: 18,
                                                 color: AppColors.secondary,
