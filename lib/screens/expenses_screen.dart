@@ -784,9 +784,9 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                     },
                   ),
           ),
-          // Add button
+          // Add button — bottom: 80 matches Pacts screen CTA clearance
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
             child: GestureDetector(
               onTap: _coupleId == null
                   ? null
@@ -798,7 +798,7 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                       ),
               child: Container(
                 width: double.infinity,
-                height: 56,
+                height: 52,
                 decoration: BoxDecoration(
                   gradient: _coupleId == null
                       ? const LinearGradient(
