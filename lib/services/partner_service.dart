@@ -7,7 +7,10 @@ class PartnerService {
 
   Future<String?> sendInvitation(String currentUid, String toEmail) async {
     final currentDoc = await _db.collection('users').doc(currentUid).get();
-    final currentData = currentDoc.data()!;
+    final currentData = currentDoc.data();
+    if (currentData == null) {
+      return 'Votre profil est introuvable. Veuillez vous reconnecter.';
+    }
 
     if (toEmail == currentData['email']) {
       return 'Vous ne pouvez pas vous inviter vous-même';

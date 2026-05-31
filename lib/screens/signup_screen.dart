@@ -75,12 +75,16 @@ class _SignupScreenState extends State<SignupScreen> {
         _emailController.text.trim(),
         _passwordController.text,
       );
+      final user = cred.user;
+      if (user == null) throw Exception('Aucun utilisateur retourné.');
+
       await _authService.updateDisplayName(
         '${_prenomController.text.trim()} ${_nomController.text.trim()}',
       );
+
       await FirebaseFirestore.instance
           .collection('users')
-          .doc(cred.user!.uid)
+          .doc(user.uid)
           .set({
         'firstName': _prenomController.text.trim(),
         'lastName': _nomController.text.trim(),
@@ -90,14 +94,18 @@ class _SignupScreenState extends State<SignupScreen> {
         'partnerId': null,
         'partnerEmail': null,
         'partnerSince': null,
-        'createdAt': Timestamp.now(),
+        'createdAt': FieldValue.serverTimestamp(),
         'photoURL': null,
       });
+
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/invite-partner');
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
       _showError(_frenchError(e.code));
+    } catch (_) {
+      if (!mounted) return;
+      _showError('Erreur lors de la création du compte. Veuillez réessayer.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -108,6 +116,28 @@ class _SignupScreenState extends State<SignupScreen> {
     try {
       final cred = await _authService.signInWithGoogle();
       if (!mounted || cred == null) return;
+      final user = cred.user!;
+
+      final docRef =
+          FirebaseFirestore.instance.collection('users').doc(user.uid);
+      final doc = await docRef.get();
+      if (!doc.exists) {
+        final parts = (user.displayName ?? '').split(' ');
+        await docRef.set({
+          'firstName': parts.isNotEmpty ? parts.first : '',
+          'lastName': parts.length > 1 ? parts.skip(1).join(' ') : '',
+          'email': user.email ?? '',
+          'gender': '',
+          'currency': '£',
+          'partnerId': null,
+          'partnerEmail': null,
+          'partnerSince': null,
+          'createdAt': FieldValue.serverTimestamp(),
+          'photoURL': user.photoURL,
+        });
+      }
+
+      if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/invite-partner');
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;

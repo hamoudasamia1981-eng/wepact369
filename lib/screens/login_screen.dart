@@ -26,11 +26,31 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _navigateAfterLogin(String uid) async {
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(uid)
-        .get();
+    final docRef =
+        FirebaseFirestore.instance.collection('users').doc(uid);
+    final doc = await docRef.get();
     if (!mounted) return;
+
+    if (!doc.exists) {
+      final user = FirebaseAuth.instance.currentUser;
+      final parts = (user?.displayName ?? '').split(' ');
+      await docRef.set({
+        'firstName': parts.isNotEmpty ? parts.first : '',
+        'lastName': parts.length > 1 ? parts.skip(1).join(' ') : '',
+        'email': user?.email ?? '',
+        'gender': '',
+        'currency': '£',
+        'partnerId': null,
+        'partnerEmail': null,
+        'partnerSince': null,
+        'createdAt': FieldValue.serverTimestamp(),
+        'photoURL': user?.photoURL,
+      });
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(context, '/invite-partner');
+      return;
+    }
+
     final partnerId = doc.data()?['partnerId'];
     Navigator.pushReplacementNamed(
       context,
