@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "556732766209",
+    "project_id": "wepact369",
+    "storage_bucket": "wepact369.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:556732766209:android:c839af257a92bb5197c800",
+        "android_client_info": {
+          "package_name": "com.example.wepact369"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCuLaVnrdw2OwZo6_qszOmd2vN77zCeg_o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:556732766209:android:d900cf2964c13f4897c800",
+        "android_client_info": {
+          "package_name": "com.example.wepact_v2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCuLaVnrdw2OwZo6_qszOmd2vN77zCeg_o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
