@@ -47,7 +47,6 @@ class _MainNavigationState extends State<MainNavigation> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Drag handle
             Center(
               child: Container(
                 width: 36,
@@ -68,166 +67,46 @@ class _MainNavigationState extends State<MainNavigation> {
                   color: AppColors.textDark),
             ),
             const SizedBox(height: 24),
-
-            // Expense card
-            GestureDetector(
+            _SheetCard(
+              color: AppColors.orangeLight,
+              borderColor: AppColors.secondary,
+              icon: Icons.credit_card,
+              iconColor: AppColors.secondary,
+              title: 'Dépense',
+              subtitle: 'Ajouter une dépense partagée',
               onTap: () {
                 Navigator.pop(ctx);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const AddExpenseScreen()),
-                );
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const AddExpenseScreen()));
               },
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.orangeLight,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                      color: AppColors.secondary, width: 1),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                          color: AppColors.white,
-                          borderRadius: BorderRadius.circular(10)),
-                      child: const Icon(Icons.credit_card,
-                          color: AppColors.secondary, size: 24),
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Dépense',
-                              style: TextStyle(
-                                  color: AppColors.secondary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16)),
-                          Text('Ajouter une dépense partagée',
-                              style: TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.textGrey)),
-                        ],
-                      ),
-                    ),
-                    const Icon(Icons.chevron_right,
-                        color: AppColors.secondary),
-                  ],
-                ),
-              ),
             ),
-
-            // Task card
-            GestureDetector(
+            const SizedBox(height: 12),
+            _SheetCard(
+              color: AppColors.purpleLight,
+              borderColor: AppColors.primary,
+              icon: Icons.assignment,
+              iconColor: AppColors.primary,
+              title: 'Tâche',
+              subtitle: 'À organiser ou à faire',
               onTap: () {
                 Navigator.pop(ctx);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const AddTaskScreen()),
-                );
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const AddTaskScreen()));
               },
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.purpleLight,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                      color: AppColors.primary, width: 1),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                          color: AppColors.white,
-                          borderRadius: BorderRadius.circular(10)),
-                      child: const Icon(Icons.assignment,
-                          color: AppColors.primary, size: 24),
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Tâche',
-                              style: TextStyle(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16)),
-                          Text('À organiser ou à faire',
-                              style: TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.textGrey)),
-                        ],
-                      ),
-                    ),
-                    const Icon(Icons.chevron_right,
-                        color: AppColors.primary),
-                  ],
-                ),
-              ),
             ),
-
-            // Initiative card
-            GestureDetector(
+            const SizedBox(height: 12),
+            _SheetCard(
+              color: AppColors.orangeLight,
+              borderColor: AppColors.secondary,
+              icon: Icons.stars,
+              iconColor: AppColors.secondary,
+              title: 'Initiative',
+              subtitle: 'Une idée à partager',
               onTap: () {
                 Navigator.pop(ctx);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const AddInitiativeScreen()),
-                );
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const AddInitiativeScreen()));
               },
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.orangeLight,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                      color: AppColors.secondary, width: 1),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                          color: AppColors.white,
-                          borderRadius: BorderRadius.circular(10)),
-                      child: const Icon(Icons.stars,
-                          color: AppColors.secondary, size: 24),
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Initiative',
-                              style: TextStyle(
-                                  color: AppColors.secondary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16)),
-                          Text('Une idée à partager',
-                              style: TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.textGrey)),
-                        ],
-                      ),
-                    ),
-                    const Icon(Icons.chevron_right,
-                        color: AppColors.secondary),
-                  ],
-                ),
-              ),
             ),
             const SizedBox(height: 16),
           ],
@@ -246,98 +125,104 @@ class _MainNavigationState extends State<MainNavigation> {
         elevation: 4,
         child: const Icon(Icons.add, color: Colors.white, size: 28),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 6,
-        color: AppColors.white,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (i) => setState(() => _currentIndex = i),
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.textGrey,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: AppColors.white,
         elevation: 8,
-        padding: EdgeInsets.zero,
-        child: SizedBox(
-          height: 60,
-          child: Row(
-            children: [
-              _NavItem(
-                  icon: Icons.home_outlined,
-                  activeIcon: Icons.home,
-                  label: 'Accueil',
-                  index: 0,
-                  current: _currentIndex,
-                  onTap: (i) => setState(() => _currentIndex = i)),
-              _NavItem(
-                  icon: Icons.receipt_long_outlined,
-                  activeIcon: Icons.receipt_long,
-                  label: 'Dépenses',
-                  index: 1,
-                  current: _currentIndex,
-                  onTap: (i) => setState(() => _currentIndex = i)),
-              const SizedBox(width: 60), // FAB gap
-              _NavItem(
-                  icon: Icons.calendar_today_outlined,
-                  activeIcon: Icons.calendar_today,
-                  label: 'Calendrier',
-                  index: 3,
-                  current: _currentIndex,
-                  onTap: (i) => setState(() => _currentIndex = i)),
-              _NavItem(
-                  icon: Icons.person_outline,
-                  activeIcon: Icons.person,
-                  label: 'Profil',
-                  index: 4,
-                  current: _currentIndex,
-                  onTap: (i) => setState(() => _currentIndex = i)),
-            ],
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Accueil',
           ),
-        ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt_long_outlined),
+            activeIcon: Icon(Icons.receipt_long),
+            label: 'Dépenses',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.handshake_outlined),
+            activeIcon: Icon(Icons.handshake),
+            label: 'Pacts',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_today_outlined),
+            activeIcon: Icon(Icons.calendar_today),
+            label: 'Calendrier',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profil',
+          ),
+        ],
       ),
     );
   }
 }
 
-class _NavItem extends StatelessWidget {
+class _SheetCard extends StatelessWidget {
+  final Color color;
+  final Color borderColor;
   final IconData icon;
-  final IconData activeIcon;
-  final String label;
-  final int index;
-  final int current;
-  final ValueChanged<int> onTap;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
 
-  const _NavItem({
+  const _SheetCard({
+    required this.color,
+    required this.borderColor,
     required this.icon,
-    required this.activeIcon,
-    required this.label,
-    required this.index,
-    required this.current,
+    required this.iconColor,
+    required this.title,
+    required this.subtitle,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final selected = current == index;
-    return Expanded(
-      child: InkWell(
-        onTap: () => onTap(index),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: borderColor),
+        ),
+        child: Row(
           children: [
-            Icon(
-              selected ? activeIcon : icon,
-              color:
-                  selected ? AppColors.primary : AppColors.textGrey,
-              size: 24,
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(10)),
+              child: Icon(icon, color: iconColor, size: 24),
             ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                color:
-                    selected ? AppColors.primary : AppColors.textGrey,
-                fontWeight: selected
-                    ? FontWeight.w600
-                    : FontWeight.normal,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: TextStyle(
+                          color: iconColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16)),
+                  Text(subtitle,
+                      style: const TextStyle(
+                          fontSize: 13, color: AppColors.textGrey)),
+                ],
               ),
             ),
+            Icon(Icons.chevron_right, color: iconColor),
           ],
         ),
       ),

@@ -203,18 +203,19 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       );
     }
 
-    final range = _getDateRange();
-    final stream = _coupleId == null
-        ? null
-        : FirebaseFirestore.instance
+    // Single-field query avoids composite index requirement.
+    // Date filtering is done client-side in the StreamBuilder builder.
+    final stream = _coupleId != null
+        ? FirebaseFirestore.instance
             .collection('expenses')
             .where('coupleId', isEqualTo: _coupleId)
-            .where('date',
-                isGreaterThanOrEqualTo: Timestamp.fromDate(range.start))
-            .where('date',
-                isLessThanOrEqualTo: Timestamp.fromDate(range.end))
-            .orderBy('date', descending: true)
-            .snapshots();
+            .snapshots()
+        : _currentUid != null
+            ? FirebaseFirestore.instance
+                .collection('expenses')
+                .where('createdBy', isEqualTo: _currentUid)
+                .snapshots()
+            : null;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -324,7 +325,26 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                             child: CircularProgressIndicator(
                                 color: AppColors.primary));
                       }
-                      final docs = snap.data?.docs ?? [];
+                      // Filter by selected period client-side
+                      final range = _getDateRange();
+                      final docs = (snap.data?.docs ?? [])
+                          .where((doc) {
+                            final ts = doc.data()['date'] as Timestamp?;
+                            if (ts == null) return false;
+                            final d = ts.toDate();
+                            return !d.isBefore(range.start) &&
+                                !d.isAfter(range.end);
+                          })
+                          .toList()
+                        ..sort((a, b) {
+                          final ta = (a.data()['date'] as Timestamp?)
+                                  ?.toDate() ??
+                              DateTime(0);
+                          final tb = (b.data()['date'] as Timestamp?)
+                                  ?.toDate() ??
+                              DateTime(0);
+                          return tb.compareTo(ta);
+                        });
                       double myTotal = 0, partnerTotal = 0;
                       for (final d in docs) {
                         final amt =

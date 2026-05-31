@@ -28,6 +28,8 @@ class _PactsScreenState extends State<PactsScreen>
   int _aFaireCount = 0;
   int _enAttenteCount = 0;
   int _refuseCount = 0;
+  bool _pactsReady = false;
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> _allPacts = [];
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _countSub;
 
   @override
@@ -74,6 +76,8 @@ class _PactsScreenState extends State<PactsScreen>
         _isLoading = false;
       });
 
+      // Single-field query — no composite index needed.
+      // Status filtering and sorting happen client-side.
       _countSub = _db
           .collection('pacts')
           .where('coupleId', isEqualTo: coupleId)
@@ -81,12 +85,14 @@ class _PactsScreenState extends State<PactsScreen>
           .listen((snap) {
         if (!mounted) return;
         setState(() {
-          _aFaireCount = snap.docs
-              .where((d) => d['status'] == 'accepted').length;
-          _enAttenteCount = snap.docs
-              .where((d) => d['status'] == 'pending').length;
-          _refuseCount = snap.docs
-              .where((d) => d['status'] == 'declined').length;
+          _allPacts = snap.docs;
+          _aFaireCount =
+              snap.docs.where((d) => d['status'] == 'accepted').length;
+          _enAttenteCount =
+              snap.docs.where((d) => d['status'] == 'pending').length;
+          _refuseCount =
+              snap.docs.where((d) => d['status'] == 'declined').length;
+          _pactsReady = true;
         });
       });
     } catch (_) {
@@ -299,54 +305,74 @@ class _PactsScreenState extends State<PactsScreen>
   }
 
   Widget _buildTab(String status) {
-    if (_coupleId == null) {
+    if (_coupleId == null || !_pactsReady) {
       return const Center(
-          child: Text('Chargement...',
-              style: TextStyle(color: AppColors.textGrey)));
+          child: CircularProgressIndicator(color: AppColors.primary));
     }
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: _db
-          .collection('pacts')
-          .where('coupleId', isEqualTo: _coupleId)
-          .where('status', isEqualTo: status)
-          .orderBy('createdAt', descending: true)
-          .snapshots(),
-      builder: (ctx, snap) {
-        if (snap.connectionState == ConnectionState.waiting) {
-          return const Center(
-              child:
-                  CircularProgressIndicator(color: AppColors.primary));
-        }
-        final docs = snap.data?.docs ?? [];
-        if (docs.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.handshake,
-                    size: 48, color: AppColors.textGrey),
-                const SizedBox(height: 12),
-                Text(
-                  status == 'accepted'
-                      ? 'Aucun pact accepté'
-                      : status == 'pending'
-                          ? 'Aucune proposition en attente'
-                          : 'Aucun pact refusé',
-                  style:
-                      const TextStyle(color: AppColors.textGrey),
-                ),
-              ],
+    final filtered = _allPacts
+        .where((d) => d.data()['status'] == status)
+        .toList()
+      ..sort((a, b) {
+        final ta = (a.data()['createdAt'] as Timestamp?)
+                ?.millisecondsSinceEpoch ??
+            0;
+        final tb = (b.data()['createdAt'] as Timestamp?)
+                ?.millisecondsSinceEpoch ??
+            0;
+        return tb.compareTo(ta);
+      });
+
+    if (filtered.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.handshake,
+                size: 48, color: AppColors.textGrey),
+            const SizedBox(height: 12),
+            Text(
+              status == 'accepted'
+                  ? 'Aucun pact accepté'
+                  : status == 'pending'
+                      ? 'Aucune proposition en attente'
+                      : 'Aucun pact refusé',
+              style: const TextStyle(color: AppColors.textGrey),
             ),
-          );
-        }
-        return ListView.builder(
-          padding: const EdgeInsets.only(bottom: 16),
-          itemCount: docs.length,
-          itemBuilder: (_, i) => _buildPactCard(docs[i]),
-        );
-      },
+          ],
+        ),
+      );
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.only(bottom: 80),
+      itemCount: filtered.length,
+      itemBuilder: (_, i) => _buildPactCard(filtered[i]),
     );
   }
+
+  Widget _tabLabel(String text, int count, Color badgeColor) => Tab(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(text),
+            const SizedBox(width: 6),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: badgeColor,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '$count',
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -377,9 +403,9 @@ class _PactsScreenState extends State<PactsScreen>
           labelColor: AppColors.primary,
           unselectedLabelColor: AppColors.textGrey,
           tabs: [
-            Tab(text: 'À faire ($_aFaireCount)'),
-            Tab(text: 'En attente ($_enAttenteCount)'),
-            Tab(text: 'Refusé ($_refuseCount)'),
+            _tabLabel('À faire', _aFaireCount, AppColors.primary),
+            _tabLabel('En attente', _enAttenteCount, AppColors.secondary),
+            _tabLabel('Refusé', _refuseCount, AppColors.error),
           ],
         ),
       ),
