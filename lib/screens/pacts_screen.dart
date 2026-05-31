@@ -406,7 +406,7 @@ class PactsScreenState extends State<PactsScreen>
       );
     }
     return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 80),
+      padding: const EdgeInsets.only(bottom: 148),
       itemCount: filtered.length,
       itemBuilder: (_, i) => _buildPactCard(filtered[i], l),
     );
@@ -491,11 +491,11 @@ class PactsScreenState extends State<PactsScreen>
           Positioned(
             left: 16,
             right: 16,
-            bottom: 16,
+            bottom: 80,
             child: GestureDetector(
               onTap: () => _showAddPactSheet(context),
               child: Container(
-                height: 56,
+                height: 52,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [Color(0xFF7C3AED), Color(0xFFFF8C00)],
