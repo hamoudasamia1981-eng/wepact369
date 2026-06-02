@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../config/app_localizations.dart';
 import '../providers/language_provider.dart';
 import '../theme/app_colors.dart';
+import '../theme/theme_ext.dart';
 import 'add_expense_screen.dart';
 import 'add_initiative_screen.dart';
 import 'add_shopping_item_screen.dart';
@@ -65,7 +66,7 @@ class _MainNavigationState extends State<MainNavigation> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.white,
+      backgroundColor: context.colorCard,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -88,10 +89,10 @@ class _MainNavigationState extends State<MainNavigation> {
             Text(
               l.createWhat,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textDark),
+                  color: context.colorText),
             ),
             const SizedBox(height: 24),
             _SheetCard(
@@ -215,9 +216,9 @@ class _MainNavigationState extends State<MainNavigation> {
         currentIndex: _currentIndex,
         onTap: (i) => setState(() => _currentIndex = i),
         selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textGrey,
+        unselectedItemColor: context.colorTextMuted,
         type: BottomNavigationBarType.fixed,
-        backgroundColor: AppColors.white,
+        backgroundColor: Theme.of(context).bottomNavigationBarTheme.backgroundColor,
         elevation: 8,
         iconSize: 24,
         selectedFontSize: 11,
@@ -272,7 +273,7 @@ class _SheetCard extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                  color: AppColors.white,
+                  color: context.colorIconBg,
                   borderRadius: BorderRadius.circular(10)),
               child: Icon(icon, color: iconColor, size: 24),
             ),
@@ -287,8 +288,8 @@ class _SheetCard extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                           fontSize: 16)),
                   Text(subtitle,
-                      style: const TextStyle(
-                          fontSize: 13, color: AppColors.textGrey)),
+                      style: TextStyle(
+                          fontSize: 13, color: context.colorTextMuted)),
                 ],
               ),
             ),

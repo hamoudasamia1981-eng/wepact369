@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../config/app_localizations.dart';
 import '../theme/app_colors.dart';
+import '../theme/theme_ext.dart';
 import 'pact_detail_screen.dart';
 
 class CalendarScreen extends StatefulWidget {
@@ -136,7 +137,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         ? FontWeight.bold
                         : FontWeight.normal,
                     color:
-                        isToday ? Colors.white : AppColors.textDark,
+                        isToday ? Colors.white : context.colorText,
                   ),
                 ),
               ),
@@ -206,7 +207,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: context.colorCard,
         borderRadius: BorderRadius.circular(12),
         boxShadow: const [
           BoxShadow(
@@ -232,10 +233,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textDark)),
+                        color: context.colorText)),
                 Text(l.proposedBy(proposerName),
                     style: TextStyle(
                         fontSize: 12,
@@ -267,9 +268,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final l = AppLocalizations.of(context);
 
     if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(
+      return Scaffold(
+        backgroundColor: context.colorBackground,
+        body: const Center(
             child:
                 CircularProgressIndicator(color: AppColors.primary)),
       );
@@ -284,17 +285,17 @@ class _CalendarScreenState extends State<CalendarScreen> {
         '${l.monthsFull[_selectedDay.month - 1]}';
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colorBackground,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: AppColors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         centerTitle: true,
         title: Text(l.calendarTitle,
-            style: const TextStyle(
+            style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
-                color: AppColors.textDark)),
+                color: context.colorText)),
         actions: const [
           LangToggleButton(dark: false),
           SizedBox(width: 8),
@@ -304,7 +305,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ? Center(
               child: Text(
                 l.connectCalendar,
-                style: const TextStyle(color: AppColors.textGrey),
+                style: TextStyle(color: context.colorTextMuted),
                 textAlign: TextAlign.center,
               ),
             )
@@ -351,10 +352,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               child: Center(
                                 child: Text(
                                   '${l.monthsFull[_focusedMonth.month - 1]} ${_focusedMonth.year}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
-                                      color: AppColors.textDark),
+                                      color: context.colorText),
                                 ),
                               ),
                             ),
@@ -375,12 +376,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               .map((h) => Expanded(
                                     child: Center(
                                       child: Text(h,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                               fontSize: 12,
                                               fontWeight:
                                                   FontWeight.bold,
-                                              color: AppColors
-                                                  .textGrey)),
+                                              color: context
+                                                  .colorTextMuted)),
                                     ),
                                   ))
                               .toList(),
@@ -432,9 +433,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                       shape: BoxShape.circle)),
                               const SizedBox(width: 4),
                               Text(l.taskType,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontSize: 12,
-                                      color: AppColors.textGrey)),
+                                      color: context.colorTextMuted)),
                             ]),
                             const SizedBox(width: 16),
                             Row(children: [
@@ -446,9 +447,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                       shape: BoxShape.circle)),
                               const SizedBox(width: 4),
                               Text(l.initiativeType,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontSize: 12,
-                                      color: AppColors.textGrey)),
+                                      color: context.colorTextMuted)),
                             ]),
                           ],
                         ),
@@ -468,16 +469,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               children: [
                                 Text(
                                   selectedDayLabel,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
-                                      color: AppColors.textDark),
+                                      color: context.colorText),
                                 ),
                                 const Spacer(),
                                 Text(
                                   l.pacteCount(selectedPacts.length),
-                                  style: const TextStyle(
-                                      color: AppColors.textGrey),
+                                  style: TextStyle(
+                                      color: context.colorTextMuted),
                                 ),
                               ],
                             ),
@@ -489,8 +490,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                       vertical: 24),
                                   child: Text(
                                     l.noPactsDay,
-                                    style: const TextStyle(
-                                        color: AppColors.textGrey),
+                                    style: TextStyle(
+                                        color: context.colorTextMuted),
                                   ),
                                 ),
                               )

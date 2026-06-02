@@ -435,6 +435,7 @@ class LangToggleButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<LanguageProvider>();
+    final useDark = dark || Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () =>
           provider.setLanguage(provider.code == 'fr' ? 'en' : 'fr'),
@@ -443,7 +444,7 @@ class LangToggleButton extends StatelessWidget {
             const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
           border: Border.all(
-            color: dark
+            color: useDark
                 ? Colors.white54
                 : AppColors.textGrey.withAlpha(120),
           ),
@@ -460,7 +461,7 @@ class LangToggleButton extends StatelessWidget {
             Text(
               provider.code.toUpperCase(),
               style: TextStyle(
-                color: dark ? Colors.white : AppColors.textDark,
+                color: useDark ? Colors.white : AppColors.textDark,
                 fontWeight: FontWeight.bold,
                 fontSize: 11,
               ),

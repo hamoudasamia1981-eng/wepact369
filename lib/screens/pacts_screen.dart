@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../config/app_localizations.dart';
 import '../theme/app_colors.dart';
+import '../theme/theme_ext.dart';
 import 'add_initiative_screen.dart';
 import 'add_task_screen.dart';
 
@@ -167,7 +168,7 @@ class PactsScreenState extends State<PactsScreen>
   void _showAddPactSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.white,
+      backgroundColor: context.colorCard,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -252,7 +253,7 @@ class PactsScreenState extends State<PactsScreen>
     final displayDate = dueDate ?? createdAt;
 
     return Card(
-      color: AppColors.white,
+      color: context.colorCard,
       elevation: 1,
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16)),
@@ -281,10 +282,10 @@ class PactsScreenState extends State<PactsScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(title,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.textDark)),
+                              color: context.colorText)),
                       Text(l.proposedBy(proposerName),
                           style: TextStyle(
                               fontSize: 13,
@@ -293,9 +294,9 @@ class PactsScreenState extends State<PactsScreen>
                                   : AppColors.partnerColor)),
                       if (description.isNotEmpty)
                         Text(description,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 12,
-                                color: AppColors.textGrey),
+                                color: context.colorTextMuted),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis),
                     ],
@@ -310,8 +311,8 @@ class PactsScreenState extends State<PactsScreen>
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.calendar_today,
-                              size: 12, color: AppColors.textGrey),
+                          Icon(Icons.calendar_today,
+                              size: 12, color: context.colorTextMuted),
                           const SizedBox(width: 4),
                           Text(_formatDate(displayDate, l),
                               style: const TextStyle(
@@ -319,8 +320,8 @@ class PactsScreenState extends State<PactsScreen>
                                   color: AppColors.textGrey)),
                         ],
                       ),
-                    const Icon(Icons.chevron_right,
-                        color: AppColors.textGrey),
+                    Icon(Icons.chevron_right,
+                        color: context.colorTextMuted),
                   ],
                 ),
               ],
@@ -390,8 +391,8 @@ class PactsScreenState extends State<PactsScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.handshake,
-                size: 48, color: AppColors.textGrey),
+            Icon(Icons.handshake,
+                size: 48, color: context.colorTextMuted),
             const SizedBox(height: 12),
             Text(
               status == 'accepted'
@@ -399,7 +400,7 @@ class PactsScreenState extends State<PactsScreen>
                   : status == 'pending'
                       ? l.noPendingPacts
                       : l.noDeclinedPacts,
-              style: const TextStyle(color: AppColors.textGrey),
+              style: TextStyle(color: context.colorTextMuted),
             ),
           ],
         ),
@@ -442,26 +443,26 @@ class PactsScreenState extends State<PactsScreen>
     final l = AppLocalizations.of(context);
 
     if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(
+      return Scaffold(
+        backgroundColor: context.colorBackground,
+        body: const Center(
             child:
                 CircularProgressIndicator(color: AppColors.primary)),
       );
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colorBackground,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: AppColors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         centerTitle: true,
         title: Text(l.pactsTitle,
-            style: const TextStyle(
+            style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
-                color: AppColors.textDark)),
+                color: context.colorText)),
         actions: const [
           LangToggleButton(dark: false),
           SizedBox(width: 8),

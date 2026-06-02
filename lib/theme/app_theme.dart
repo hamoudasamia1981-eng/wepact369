@@ -53,6 +53,52 @@ class AppTheme {
           selectionColor: Color(0x337C3AED),
           selectionHandleColor: AppColors.primary,
         ),
+        cardTheme: CardThemeData(
+          color: const Color(0xFF1E1E35),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)),
+          margin: EdgeInsets.zero,
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFF252545),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide:
+                const BorderSide(color: Colors.white24, width: 1),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide:
+                const BorderSide(color: Colors.white24, width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide:
+                const BorderSide(color: AppColors.primary, width: 2),
+          ),
+          hintStyle:
+              GoogleFonts.poppins(color: Colors.white38, fontSize: 14),
+          labelStyle:
+              GoogleFonts.poppins(color: Colors.white60, fontSize: 14),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        ),
+        dividerTheme: const DividerThemeData(
+          color: Colors.white12,
+          thickness: 1,
+        ),
+        checkboxTheme: CheckboxThemeData(
+          fillColor: WidgetStateProperty.resolveWith(
+            (s) => s.contains(WidgetState.selected)
+                ? AppColors.success
+                : Colors.transparent,
+          ),
+          side: const BorderSide(color: Colors.white38, width: 1.5),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+        ),
         snackBarTheme: SnackBarThemeData(
           backgroundColor: const Color(0xFF2D2D44),
           contentTextStyle:

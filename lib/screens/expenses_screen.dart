@@ -7,6 +7,7 @@ import '../config/app_localizations.dart';
 import '../providers/language_provider.dart';
 import '../providers/settings_provider.dart';
 import '../theme/app_colors.dart';
+import '../theme/theme_ext.dart';
 import 'add_expense_screen.dart';
 
 class ExpensesScreen extends StatefulWidget {
@@ -223,9 +224,9 @@ class ExpensesScreenState extends State<ExpensesScreen> {
     final displayCurrency = context.watch<SettingsProvider>().currency;
 
     if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(
+      return Scaffold(
+        backgroundColor: context.colorBackground,
+        body: const Center(
             child: CircularProgressIndicator(color: AppColors.primary)),
       );
     }
@@ -243,17 +244,17 @@ class ExpensesScreenState extends State<ExpensesScreen> {
             : null;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colorBackground,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: AppColors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         centerTitle: true,
         title: Text(l.expensesTitle,
-            style: const TextStyle(
+            style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
-                color: AppColors.textDark)),
+                color: context.colorText)),
         actions: const [
           LangToggleButton(dark: false),
           SizedBox(width: 8),
@@ -306,10 +307,12 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                             foregroundColor: AppColors.white,
                             shape: const StadiumBorder(),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
+                                horizontal: 12, vertical: 8),
                             minimumSize: Size.zero,
                             tapTargetSize:
                                 MaterialTapTargetSize.shrinkWrap,
+                            textStyle:
+                                const TextStyle(fontSize: 12),
                           ),
                           child: Text(displayLabel),
                         )
@@ -324,10 +327,12 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                                 color: AppColors.textGrey),
                             shape: const StadiumBorder(),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
+                                horizontal: 12, vertical: 8),
                             minimumSize: Size.zero,
                             tapTargetSize:
                                 MaterialTapTargetSize.shrinkWrap,
+                            textStyle:
+                                const TextStyle(fontSize: 12),
                           ),
                           child: Text(displayLabel),
                         ),

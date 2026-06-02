@@ -7,6 +7,7 @@ import '../config/app_localizations.dart';
 import '../providers/language_provider.dart';
 import '../services/shopping_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/theme_ext.dart';
 
 class ShoppingListScreen extends StatefulWidget {
   const ShoppingListScreen({super.key});
@@ -126,16 +127,16 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
       builder: (ctx) => AlertDialog(
         title: Text(
           l.shoppingClearConfirmTitle,
-          style: const TextStyle(
-              color: AppColors.textDark, fontWeight: FontWeight.w700),
+          style: TextStyle(
+              color: context.colorText, fontWeight: FontWeight.w700),
         ),
         content: Text(l.shoppingClearConfirmBody,
-            style: const TextStyle(color: AppColors.textGrey)),
+            style: TextStyle(color: context.colorTextMuted)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(l.cancel,
-                style: const TextStyle(color: AppColors.textGrey)),
+                style: TextStyle(color: context.colorTextMuted)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -176,26 +177,26 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
 
     // Early return while loading — same pattern as ExpensesScreen / PactsScreen
     if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(
+      return Scaffold(
+        backgroundColor: context.colorBackground,
+        body: const Center(
           child: CircularProgressIndicator(color: AppColors.primary),
         ),
       );
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colorBackground,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: AppColors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         toolbarHeight: 48,
         centerTitle: false,
         title: Text(
           l.shoppingListTitle,
-          style: const TextStyle(
-            color: AppColors.textDark,
+          style: TextStyle(
+            color: context.colorText,
             fontWeight: FontWeight.w700,
             fontSize: 20,
           ),
@@ -219,12 +220,15 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
 
     // Desktop/web: stronger contrast so elements don't vanish on white page.
     // Mobile: keep current values unchanged.
-    final containerBg =
-        kIsWeb ? const Color(0xFFF0F2F5) : AppColors.white;
-    final inputFill =
-        kIsWeb ? const Color(0xFFE8EAED) : const Color(0xFFF3F4F6);
-    final enabledBorderColor =
-        kIsWeb ? const Color(0xFF9CA3AF) : const Color(0xFFD1D5DB);
+    final containerBg = context.isDark
+        ? context.colorCard
+        : (kIsWeb ? const Color(0xFFF0F2F5) : AppColors.white);
+    final inputFill = context.isDark
+        ? context.colorInput
+        : (kIsWeb ? const Color(0xFFE8EAED) : const Color(0xFFF3F4F6));
+    final enabledBorderColor = context.isDark
+        ? Colors.white24
+        : (kIsWeb ? const Color(0xFF9CA3AF) : const Color(0xFFD1D5DB));
     final buttonElevation = kIsWeb ? 1.0 : 0.0;
 
     return Container(
@@ -237,12 +241,12 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
               controller: _itemController,
               focusNode: _focusNode,
               enabled: _coupleId != null,
-              style: const TextStyle(
-                  color: AppColors.textDark, fontSize: 15),
+              style: TextStyle(
+                  color: context.colorText, fontSize: 15),
               decoration: InputDecoration(
                 hintText: l.shoppingItemHint,
-                hintStyle: const TextStyle(
-                    color: AppColors.textGrey, fontSize: 14),
+                hintStyle: TextStyle(
+                    color: context.colorTextMuted, fontSize: 14),
                 filled: true,
                 fillColor: inputFill,
                 contentPadding: const EdgeInsets.symmetric(
@@ -314,14 +318,14 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.shopping_cart_outlined,
-                  size: 56, color: AppColors.textGrey),
+              Icon(Icons.shopping_cart_outlined,
+                  size: 56, color: context.colorTextMuted),
               const SizedBox(height: 16),
               Text(
                 l.shoppingNoPartner,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                    color: AppColors.textGrey, fontSize: 15),
+                style: TextStyle(
+                    color: context.colorTextMuted, fontSize: 15),
               ),
             ],
           ),
@@ -375,8 +379,8 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
             child: Text(
               l.shoppingListEmpty,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                  color: AppColors.textGrey, fontSize: 15),
+              style: TextStyle(
+                  color: context.colorTextMuted, fontSize: 15),
             ),
           );
         }
@@ -406,8 +410,8 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
       padding: const EdgeInsets.only(top: 12, bottom: 6),
       child: Text(
         title.toUpperCase(),
-        style: const TextStyle(
-          color: AppColors.textGrey,
+        style: TextStyle(
+          color: context.colorTextMuted,
           fontSize: 11,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.8,
@@ -427,8 +431,8 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
         children: [
           Text(
             l.shoppingPurchasedSection.toUpperCase(),
-            style: const TextStyle(
-              color: AppColors.textGrey,
+            style: TextStyle(
+              color: context.colorTextMuted,
               fontSize: 11,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
@@ -477,10 +481,11 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
       decoration: BoxDecoration(
-        color:
-            isCompleted ? const Color(0xFFF9FAFB) : AppColors.white,
+        color: isCompleted
+            ? (context.isDark ? const Color(0xFF181830) : const Color(0xFFF9FAFB))
+            : context.colorCard,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: context.colorBorder),
         boxShadow: isCompleted
             ? null
             : const [
@@ -501,20 +506,20 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(4)),
           side:
-              const BorderSide(color: AppColors.textGrey, width: 1.5),
+              BorderSide(color: context.colorTextMuted, width: 1.5),
         ),
         title: Text(
           name,
           style: TextStyle(
             color: isCompleted
-                ? AppColors.textGrey
-                : AppColors.textDark,
+                ? context.colorTextMuted
+                : context.colorText,
             fontSize: 15,
             fontWeight:
                 isCompleted ? FontWeight.w400 : FontWeight.w500,
             decoration:
                 isCompleted ? TextDecoration.lineThrough : null,
-            decorationColor: AppColors.textGrey,
+            decorationColor: context.colorTextMuted,
           ),
         ),
         subtitle: subtitleName.isNotEmpty
@@ -524,7 +529,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                   '$subtitlePrefix $subtitleName',
                   style: TextStyle(
                     color: isCompleted
-                        ? AppColors.textGrey
+                        ? context.colorTextMuted
                         : _addedByColor(createdBy),
                     fontSize: 11,
                     fontWeight: isCompleted

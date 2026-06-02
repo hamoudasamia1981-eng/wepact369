@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../config/app_localizations.dart';
 import '../providers/language_provider.dart';
 import '../theme/app_colors.dart';
+import '../theme/theme_ext.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   const AddExpenseScreen({super.key});
@@ -136,15 +137,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     final l = AppLocalizations.of(context);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colorBackground,
       appBar: AppBar(
-        backgroundColor: AppColors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
-        leading: const BackButton(color: AppColors.textDark),
+        leading: BackButton(color: context.colorText),
         title: Text(
           l.newExpenseTitle,
-          style: const TextStyle(
-              color: AppColors.textDark, fontWeight: FontWeight.w600),
+          style: TextStyle(
+              color: context.colorText, fontWeight: FontWeight.w600),
         ),
         actions: const [
           LangToggleButton(dark: false),
@@ -157,16 +158,16 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(l.titleFieldLabel,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textDark)),
+                    color: context.colorText)),
             const SizedBox(height: 8),
             TextField(
               controller: _titleController,
               textCapitalization: TextCapitalization.sentences,
-              style: const TextStyle(
-                  color: AppColors.textDark,
+              style: TextStyle(
+                  color: context.colorText,
                   fontSize: 16,
                   fontWeight: FontWeight.w500),
               cursorColor: AppColors.primary,
@@ -175,17 +176,17 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             const SizedBox(height: 20),
 
             Text('${l.amountLabel} ($_currency)',
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textDark)),
+                    color: context.colorText)),
             const SizedBox(height: 8),
             TextField(
               controller: _amountController,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
-              style: const TextStyle(
-                  color: AppColors.textDark,
+              style: TextStyle(
+                  color: context.colorText,
                   fontSize: 16,
                   fontWeight: FontWeight.w500),
               cursorColor: AppColors.primary,
@@ -194,10 +195,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             const SizedBox(height: 20),
 
             Text(l.categoryLabel,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textDark)),
+                    color: context.colorText)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -214,12 +215,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     decoration: BoxDecoration(
                       color: selected
                           ? AppColors.primary
-                          : AppColors.white,
+                          : context.colorCard,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: selected
                             ? Colors.transparent
-                            : AppColors.textGrey.withAlpha(100),
+                            : context.colorTextMuted.withAlpha(100),
                       ),
                     ),
                     child: Row(
@@ -234,7 +235,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                               fontSize: 13,
                               color: selected
                                   ? Colors.white
-                                  : AppColors.textGrey),
+                                  : context.colorTextMuted),
                         ),
                       ],
                     ),
@@ -245,28 +246,28 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             const SizedBox(height: 20),
 
             Text(l.dateLabel,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textDark)),
+                    color: context.colorText)),
             const SizedBox(height: 8),
             GestureDetector(
               onTap: _pickDate,
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.white,
+                  color: context.colorCard,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                      color: AppColors.textGrey.withAlpha(76)),
+                      color: context.colorBorder),
                 ),
                 child: Row(children: [
                   const Icon(Icons.calendar_today,
                       color: AppColors.primary, size: 20),
                   const SizedBox(width: 8),
                   Text(_formatDate(_selectedDate, l),
-                      style: const TextStyle(
-                          color: AppColors.textDark, fontSize: 14)),
+                      style: TextStyle(
+                          color: context.colorText, fontSize: 14)),
                 ]),
               ),
             ),

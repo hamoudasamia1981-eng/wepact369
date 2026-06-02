@@ -6,6 +6,7 @@ import '../config/app_localizations.dart';
 import '../providers/language_provider.dart';
 import '../services/shopping_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/theme_ext.dart';
 
 class AddShoppingItemScreen extends StatefulWidget {
   const AddShoppingItemScreen({super.key});
@@ -84,15 +85,15 @@ class _AddShoppingItemScreenState extends State<AddShoppingItemScreen> {
     context.watch<LanguageProvider>();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colorBackground,
       appBar: AppBar(
-        backgroundColor: AppColors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
-        leading: const BackButton(color: AppColors.textDark),
+        leading: BackButton(color: context.colorText),
         title: Text(
           l.createToBuyLabel,
-          style: const TextStyle(
-            color: AppColors.textDark,
+          style: TextStyle(
+            color: context.colorText,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -105,10 +106,10 @@ class _AddShoppingItemScreenState extends State<AddShoppingItemScreen> {
           children: [
             Text(
               l.shoppingItemHint,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textDark,
+                color: context.colorText,
               ),
             ),
             const SizedBox(height: 8),
@@ -116,8 +117,8 @@ class _AddShoppingItemScreenState extends State<AddShoppingItemScreen> {
               controller: _nameController,
               focusNode: _focusNode,
               textCapitalization: TextCapitalization.sentences,
-              style: const TextStyle(
-                color: AppColors.textDark,
+              style: TextStyle(
+                color: context.colorText,
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),

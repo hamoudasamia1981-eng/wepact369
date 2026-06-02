@@ -16,7 +16,8 @@ class AuthService {
 
   Future<UserCredential?> signInWithGoogle() async {
     if (kIsWeb) {
-      return await _auth.signInWithPopup(GoogleAuthProvider());
+      await _auth.signInWithRedirect(GoogleAuthProvider());
+      return null; // page navigates away; result handled by getRedirectResult() in main()
     }
     final googleUser = await GoogleSignIn().signIn();
     if (googleUser == null) return null;

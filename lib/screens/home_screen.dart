@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../config/app_localizations.dart';
 import '../providers/settings_provider.dart';
 import '../theme/app_colors.dart';
+import '../theme/theme_ext.dart';
 
 class _ActivityItem {
   final String type; // 'pact', 'expense', or 'shopping'
@@ -390,7 +391,7 @@ class _HomeScreenState extends State<HomeScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 3),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: context.colorCard,
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
           BoxShadow(
@@ -411,15 +412,15 @@ class _HomeScreenState extends State<HomeScreen> {
           fit: BoxFit.scaleDown,
           alignment: Alignment.centerLeft,
           child: Text(value,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textDark)),
+                  color: context.colorText)),
         ),
         const SizedBox(height: 2),
         Text(label,
             maxLines: 2,
-            style: const TextStyle(fontSize: 10, color: AppColors.textGrey)),
+            style: TextStyle(fontSize: 10, color: context.colorTextMuted)),
       ]),
     );
   }
@@ -429,16 +430,16 @@ class _HomeScreenState extends State<HomeScreen> {
     final l = AppLocalizations.of(context);
 
     if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(
+      return Scaffold(
+        backgroundColor: context.colorBackground,
+        body: const Center(
             child: CircularProgressIndicator(color: AppColors.primary)),
       );
     }
 
     if (_partnerId == null) {
       return Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colorBackground,
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(32),
@@ -447,8 +448,8 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Text(l.connectPartnerMsg,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        fontSize: 16, color: AppColors.textGrey)),
+                    style: TextStyle(
+                        fontSize: 16, color: context.colorTextMuted)),
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () =>
@@ -473,7 +474,7 @@ class _HomeScreenState extends State<HomeScreen> {
         : '?';
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colorBackground,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -490,17 +491,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(l.greeting(DateTime.now().hour),
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 14,
-                                  color: AppColors.textGrey)),
+                                  color: context.colorTextMuted)),
                           const SizedBox(height: 4),
                           Text(
                             '${_firstName ?? ''} 💜 ${_partnerFirstName ?? ''}',
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.textDark),
+                                color: context.colorText),
                           ),
                           if (_pendingForMeCount > 0) ...[
                             const SizedBox(height: 4),
@@ -518,7 +519,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppColors.white,
+                        color: context.colorCard,
                         shape: BoxShape.circle,
                         boxShadow: const [
                           BoxShadow(
@@ -814,10 +815,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Row(children: [
                       Text(l.recentActivity,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.textDark)),
+                              color: context.colorText)),
                       const Spacer(),
                       TextButton(
                         onPressed: () => widget.onTabChange?.call(2),
@@ -833,8 +834,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           padding:
                               const EdgeInsets.symmetric(vertical: 24),
                           child: Text(l.noActivity,
-                              style: const TextStyle(
-                                  color: AppColors.textGrey)),
+                              style: TextStyle(
+                                  color: context.colorTextMuted)),
                         ),
                       )
                     else
@@ -883,7 +884,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             margin: const EdgeInsets.only(bottom: 8),
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.white,
+                              color: context.colorCard,
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: const [
                                 BoxShadow(
@@ -912,10 +913,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                       CrossAxisAlignment.start,
                                   children: [
                                     Text(displayTitle,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.bold,
-                                            color: AppColors.textDark)),
+                                            color: context.colorText)),
                                     Text(subtitle,
                                         style: TextStyle(
                                             fontSize: 13,

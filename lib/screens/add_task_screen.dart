@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../config/app_localizations.dart';
 import '../providers/language_provider.dart';
 import '../theme/app_colors.dart';
+import '../theme/theme_ext.dart';
 
 class AddTaskScreen extends StatefulWidget {
   const AddTaskScreen({super.key});
@@ -119,14 +120,14 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     final l = AppLocalizations.of(context);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colorBackground,
       appBar: AppBar(
-        backgroundColor: AppColors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
-        leading: const BackButton(color: AppColors.textDark),
+        leading: BackButton(color: context.colorText),
         title: Text(l.newTaskTitle,
-            style: const TextStyle(
-                color: AppColors.textDark, fontWeight: FontWeight.w600)),
+            style: TextStyle(
+                color: context.colorText, fontWeight: FontWeight.w600)),
         actions: const [
           LangToggleButton(dark: false),
           SizedBox(width: 8),
@@ -139,10 +140,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
           children: [
             // Category chips
             Text(l.categoryLabel,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textDark)),
+                    color: context.colorText)),
             const SizedBox(height: 8),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -158,12 +159,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
-                          color: sel ? AppColors.primary : AppColors.white,
+                          color: sel ? AppColors.primary : context.colorCard,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: sel
                                 ? Colors.transparent
-                                : AppColors.textGrey.withAlpha(100),
+                                : context.colorTextMuted.withAlpha(100),
                           ),
                         ),
                         child: Row(
@@ -177,7 +178,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                                     fontSize: 13,
                                     color: sel
                                         ? Colors.white
-                                        : AppColors.textGrey)),
+                                        : context.colorTextMuted)),
                           ],
                         ),
                       ),
@@ -189,16 +190,16 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             const SizedBox(height: 20),
 
             Text(l.taskTitleLabel,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textDark)),
+                    color: context.colorText)),
             const SizedBox(height: 8),
             TextField(
               controller: _titleController,
               textCapitalization: TextCapitalization.sentences,
-              style: const TextStyle(
-                  color: AppColors.textDark,
+              style: TextStyle(
+                  color: context.colorText,
                   fontSize: 16,
                   fontWeight: FontWeight.w500),
               cursorColor: AppColors.primary,
@@ -207,16 +208,16 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             const SizedBox(height: 20),
 
             Text(l.descriptionLabel,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textDark)),
+                    color: context.colorText)),
             const SizedBox(height: 8),
             TextField(
               controller: _descController,
               maxLines: 4,
-              style: const TextStyle(
-                  color: AppColors.textDark,
+              style: TextStyle(
+                  color: context.colorText,
                   fontSize: 16,
                   fontWeight: FontWeight.w500),
               cursorColor: AppColors.primary,
@@ -225,20 +226,19 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             const SizedBox(height: 20),
 
             Text(l.deadlineLabel,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textDark)),
+                    color: context.colorText)),
             const SizedBox(height: 8),
             GestureDetector(
               onTap: _pickDate,
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.white,
+                  color: context.colorCard,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: AppColors.textGrey.withAlpha(76)),
+                  border: Border.all(color: context.colorBorder),
                 ),
                 child: Row(children: [
                   const Icon(Icons.calendar_today,
@@ -250,8 +250,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                         : l.chooseDate,
                     style: TextStyle(
                         color: _selectedDate != null
-                            ? AppColors.textDark
-                            : AppColors.textGrey,
+                            ? context.colorText
+                            : context.colorTextMuted,
                         fontSize: 14),
                   ),
                 ]),
@@ -261,10 +261,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
             Text(
               l.isFr ? 'Heure (optionnel)' : 'Time (optional)',
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textDark),
+                  color: context.colorText),
             ),
             const SizedBox(height: 8),
             GestureDetector(
@@ -272,10 +272,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.white,
+                  color: context.colorCard,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: AppColors.textGrey.withAlpha(76)),
+                  border: Border.all(color: context.colorBorder),
                 ),
                 child: Row(children: [
                   const Icon(Icons.access_time,
@@ -287,8 +286,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                         : (l.isFr ? 'Choisir une heure' : 'Choose a time'),
                     style: TextStyle(
                         color: _selectedTime != null
-                            ? AppColors.textDark
-                            : AppColors.textGrey,
+                            ? context.colorText
+                            : context.colorTextMuted,
                         fontSize: 14),
                   ),
                 ]),

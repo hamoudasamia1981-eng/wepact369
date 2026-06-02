@@ -7,6 +7,7 @@ import '../providers/language_provider.dart';
 import '../providers/settings_provider.dart';
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/theme_ext.dart';
 import 'settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -126,14 +127,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final settings = context.watch<SettingsProvider>();
 
     if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      return Scaffold(
+        backgroundColor: context.colorBackground,
+        body: const Center(child: CircularProgressIndicator(color: AppColors.primary)),
       );
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colorBackground,
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -331,8 +332,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   subtitle: Text(
                     l.connectedWith(_firstName ?? ''),
-                    style: const TextStyle(
-                        fontSize: 13, color: AppColors.textGrey),
+                    style: TextStyle(
+                        fontSize: 13, color: context.colorTextMuted),
                   ),
                 ),
               ),
@@ -342,15 +343,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
               child: Text(l.settingsSection,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textGrey,
+                      color: context.colorTextMuted,
                       letterSpacing: 1.2)),
             ),
             Card(
               margin: const EdgeInsets.symmetric(horizontal: 16),
-              color: AppColors.white,
+              color: context.colorCard,
               elevation: 1,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
@@ -360,10 +361,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     leading: _iconBox(
                         AppColors.purpleLight, Icons.settings, AppColors.primary),
                     title: Text(l.settingsLabel,
-                        style: const TextStyle(
-                            fontSize: 15, color: AppColors.textDark)),
-                    trailing: const Icon(Icons.chevron_right,
-                        color: AppColors.textGrey),
+                        style: TextStyle(
+                            fontSize: 15, color: context.colorText)),
+                    trailing: Icon(Icons.chevron_right,
+                        color: context.colorTextMuted),
                     onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -376,8 +377,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Icons.dark_mode,
                         Color(0xFFF59E0B)),
                     title: Text(l.darkModeLabel,
-                        style: const TextStyle(
-                            fontSize: 15, color: AppColors.textDark)),
+                        style: TextStyle(
+                            fontSize: 15, color: context.colorText)),
                     trailing: Switch(
                       value: settings.isDark,
                       onChanged: (v) =>
@@ -390,10 +391,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     leading: _iconBox(AppColors.purpleLight,
                         Icons.notifications_outlined, AppColors.primary),
                     title: Text(l.notificationsLabel,
-                        style: const TextStyle(
-                            fontSize: 15, color: AppColors.textDark)),
-                    trailing: const Icon(Icons.chevron_right,
-                        color: AppColors.textGrey),
+                        style: TextStyle(
+                            fontSize: 15, color: context.colorText)),
+                    trailing: Icon(Icons.chevron_right,
+                        color: context.colorTextMuted),
                     onTap: () => ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(l.comingSoon),
@@ -427,10 +428,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
 
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'WePact v1.0.0',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 11, color: AppColors.textGrey),
+              style: TextStyle(fontSize: 11, color: context.colorTextMuted),
             ),
             SizedBox(
                 height: 24 + MediaQuery.of(context).padding.bottom),
