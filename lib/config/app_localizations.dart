@@ -209,6 +209,10 @@ class AppLocalizations {
   String get yearFilter => isFr ? 'Année' : 'Year';
   List<String> get periodFilters =>
       [todayFilter, weekFilter, monthFilter, yearFilter];
+  String get addPactButton =>
+      isFr ? '+ Ajouter un pacte' : '+ Add a pact';
+  String get togetherBanner =>
+      isFr ? '💜 Profitez de votre temps ensemble' : '💜 Enjoy your time together';
   String get addExpenseButton =>
       isFr ? '+ Ajouter une dépense' : '+ Add an expense';
   String get noExpenses =>

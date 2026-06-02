@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../utils/formatters.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -59,7 +60,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String? _firstName;
   String? _partnerFirstName;
-  String? _partnerPhotoURL;
   String? _partnerId;
   String _currency = '£';
 
@@ -102,7 +102,10 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
       final userData = userDoc.data();
       final partnerId = userData?['partnerId'] as String?;
-      final firstName = userData?['firstName'] as String? ?? '';
+      final rawFirst = userData?['firstName'] as String? ?? '';
+      final firstName = rawFirst.isNotEmpty
+          ? rawFirst[0].toUpperCase() + rawFirst.substring(1)
+          : rawFirst;
       final currency = userData?['currency'] as String? ?? '£';
 
       if (partnerId == null) {
@@ -129,7 +132,6 @@ class _HomeScreenState extends State<HomeScreen> {
         _currency = currency;
         _partnerFirstName =
             partnerDoc.data()?['firstName'] as String? ?? 'Partenaire';
-        _partnerPhotoURL = partnerDoc.data()?['photoURL'] as String?;
         _isLoading = false;
       });
       context.read<SettingsProvider>().syncCurrency(currency);
@@ -311,8 +313,8 @@ class _HomeScreenState extends State<HomeScreen> {
     required String label,
   }) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 3),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
@@ -325,10 +327,10 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(7),
           decoration: BoxDecoration(
               color: iconBgColor, borderRadius: BorderRadius.circular(8)),
-          child: Icon(icon, color: iconColor, size: 20),
+          child: Icon(icon, color: iconColor, size: 18),
         ),
         const SizedBox(height: 8),
         FittedBox(
@@ -336,14 +338,14 @@ class _HomeScreenState extends State<HomeScreen> {
           alignment: Alignment.centerLeft,
           child: Text(value,
               style: const TextStyle(
-                  fontSize: 22,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textDark)),
         ),
+        const SizedBox(height: 2),
         Text(label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 12, color: AppColors.textGrey)),
+            maxLines: 2,
+            style: const TextStyle(fontSize: 10, color: AppColors.textGrey)),
       ]),
     );
   }
@@ -387,20 +389,14 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     final totalAmount = _myTotal + _partnerTotal;
-    final myProgress =
-        totalAmount > 0 ? (_myTotal / totalAmount).clamp(0.0, 1.0) : 0.0;
-    final partnerProgress = totalAmount > 0
-        ? (_partnerTotal / totalAmount).clamp(0.0, 1.0)
-        : 0.0;
+    final currency = context.watch<SettingsProvider>().currency;
+    final currentMonth = l.monthsFull[DateTime.now().month - 1];
     final myInitial = (_firstName?.isNotEmpty == true)
         ? _firstName![0].toUpperCase()
         : '?';
     final partnerInitial = (_partnerFirstName?.isNotEmpty == true)
         ? _partnerFirstName![0].toUpperCase()
         : '?';
-    final currency = context.watch<SettingsProvider>().currency;
-    final currentMonth =
-        l.monthsFull[DateTime.now().month - 1];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -469,46 +465,50 @@ class _HomeScreenState extends State<HomeScreen> {
                 GestureDetector(
                   onTap: () => widget.onNavigateToPacts?.call(1),
                   child: Container(
-                    margin: const EdgeInsets.all(16),
-                    padding: const EdgeInsets.all(16),
+                    margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
                       color: AppColors.orangeLight,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                          color: AppColors.secondary, width: 1),
+                          color: AppColors.secondary.withAlpha(100),
+                          width: 1),
                     ),
                     child: Row(children: [
-                      const Text('⏳', style: TextStyle(fontSize: 20)),
+                      const Text('⏳', style: TextStyle(fontSize: 18)),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           l.pendingBannerText(_pendingForMeCount),
                           style: const TextStyle(
-                              fontSize: 14,
+                              fontSize: 13,
                               color: AppColors.secondary,
-                              fontWeight: FontWeight.bold),
+                              fontWeight: FontWeight.w500),
                         ),
                       ),
                       const Icon(Icons.chevron_right,
-                          color: AppColors.secondary),
+                          color: AppColors.secondary, size: 20),
                     ]),
                   ),
                 )
               else
-                Container(
-                  margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: AppColors.purpleLight,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Center(
+                Center(
+                  child: Container(
+                    margin: const EdgeInsets.fromLTRB(0, 12, 0, 0),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F3FF),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                          color: AppColors.primary.withAlpha(51),
+                          width: 1),
+                    ),
                     child: Text(
-                      '✨ Tout est à jour ! Profitez de votre temps ensemble 💜',
-                      textAlign: TextAlign.center,
+                      l.togetherBanner,
                       style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 12,
                           color: AppColors.primary,
                           fontWeight: FontWeight.w500),
                     ),
@@ -521,7 +521,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF7C3AED), Color(0xFF6D28D9)],
+                    colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -534,96 +534,130 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Column(children: [
-                      CircleAvatar(
-                        radius: 20,
-                        backgroundColor: AppColors.meColor,
-                        child: Text(myInitial,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold)),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(_firstName ?? '',
-                          style: const TextStyle(
-                              fontSize: 12, color: Colors.white)),
-                      Text('$currency${_myTotal.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 4),
-                      SizedBox(
-                        width: 80,
-                        child: LinearProgressIndicator(
-                          value: myProgress,
-                          backgroundColor: Colors.white.withAlpha(76),
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                              AppColors.meColor),
-                          borderRadius: BorderRadius.circular(4),
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // LEFT – me
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircleAvatar(
+                              radius: 22,
+                              backgroundColor: AppColors.meColor,
+                              child: Text(myInitial,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16)),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              _firstName ?? '',
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white.withAlpha(217)),
+                            ),
+                            const SizedBox(height: 4),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                '$currency${formatAmount(_myTotal)}',
+                                style: const TextStyle(
+                                    fontSize: 17,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ]),
-                    Expanded(
-                      child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                      // Divider left
+                      Container(
+                        width: 1,
+                        height: 80,
+                        margin: const EdgeInsets.symmetric(horizontal: 8),
+                        color: Colors.white.withAlpha(46),
+                      ),
+                      // CENTER – total
+                      Expanded(
+                        flex: 2,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(l.totalLabel,
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.white.withAlpha(217))),
+                            const SizedBox(height: 6),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                '$currency${formatAmount(totalAmount)}',
                                 style: const TextStyle(
-                                    fontSize: 12, color: Colors.white70)),
-                            Text(
-                                '$currency${totalAmount.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                    fontSize: 22,
+                                    fontSize: 28,
                                     color: Colors.white,
-                                    fontWeight: FontWeight.bold)),
-                          ]),
-                    ),
-                    Column(children: [
-                      CircleAvatar(
-                        radius: 20,
-                        backgroundColor: AppColors.secondary,
-                        backgroundImage: _partnerPhotoURL != null
-                            ? NetworkImage(_partnerPhotoURL!)
-                            : null,
-                        child: _partnerPhotoURL == null
-                            ? Text(partnerInitial,
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold))
-                            : null,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(_partnerFirstName ?? '',
-                          style: const TextStyle(
-                              fontSize: 12, color: AppColors.secondary)),
-                      Text(
-                          '$currency${_partnerTotal.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                              fontSize: 18,
-                              color: AppColors.secondary,
-                              fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 4),
-                      SizedBox(
-                        width: 80,
-                        child: LinearProgressIndicator(
-                          value: partnerProgress,
-                          backgroundColor: Colors.white.withAlpha(76),
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                              AppColors.secondary),
-                          borderRadius: BorderRadius.circular(4),
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(l.thisMonth,
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.white.withAlpha(217))),
+                          ],
                         ),
                       ),
-                    ]),
-                  ],
-                ),
+                      // Divider right
+                      Container(
+                        width: 1,
+                        height: 80,
+                        margin: const EdgeInsets.symmetric(horizontal: 8),
+                        color: Colors.white.withAlpha(46),
+                      ),
+                      // RIGHT – partner
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircleAvatar(
+                              radius: 22,
+                              backgroundColor: AppColors.secondary,
+                              child: Text(partnerInitial,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16)),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              _partnerFirstName ?? '',
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white.withAlpha(217)),
+                            ),
+                            const SizedBox(height: 4),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                '$currency${formatAmount(_partnerTotal)}',
+                                style: TextStyle(
+                                    fontSize: 17,
+                                    color: Colors.white.withAlpha(217),
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
               ),
 
               // ── STAT CARDS ───────────────────────────────────
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                 child: Row(children: [
                   Expanded(
                     child: GestureDetector(
@@ -698,14 +732,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       )
                     else
                       ...(_recentActivity.map((item) {
-                        final cardBgColor = item.isInitiative
-                            ? AppColors.orangeLight
-                            : AppColors.purpleLight;
+                        final emojiBgColor = item.type == 'expense'
+                            ? const Color(0xFFF3F4F6)
+                            : (item.isInitiative
+                                ? AppColors.orangeLight
+                                : AppColors.purpleLight);
                         final subtitle = item.type == 'pact'
                             ? l.proposedBy(item.createdByMe
                                 ? l.youLabel
                                 : (_partnerFirstName ?? l.partnerLabel))
-                            : '${item.createdByMe ? (_firstName ?? '') : (_partnerFirstName ?? '')} • ${item.expenseCurrency ?? currency}${item.expenseAmount?.toStringAsFixed(2) ?? ''}';
+                            : '${item.createdByMe ? (_firstName ?? '') : (_partnerFirstName ?? '')} • ${item.expenseCurrency ?? currency}${item.expenseAmount != null ? formatAmount(item.expenseAmount!) : ''}';
                         final subtitleColor = item.type == 'pact'
                             ? (item.createdByMe
                                 ? AppColors.meColor
@@ -735,7 +771,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 width: 44,
                                 height: 44,
                                 decoration: BoxDecoration(
-                                    color: cardBgColor,
+                                    color: emojiBgColor,
                                     borderRadius:
                                         BorderRadius.circular(10)),
                                 child: Center(
@@ -766,7 +802,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         );
                       })),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 80),
                   ],
                 ),
               ),

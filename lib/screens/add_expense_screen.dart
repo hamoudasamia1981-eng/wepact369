@@ -71,11 +71,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       '${d.day} ${l.monthsShort[d.month - 1]} ${d.year}';
 
   Future<void> _pickDate() async {
+    final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate,
+      initialDate: _selectedDate.isAfter(now) ? now : _selectedDate,
       firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
+      lastDate: now,
     );
     if (picked != null) setState(() => _selectedDate = picked);
   }

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../utils/formatters.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -396,12 +397,6 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                         }
                       }
                       final total = myTotal + partnerTotal;
-                      final myR = total > 0
-                          ? (myTotal / total).clamp(0.0, 1.0)
-                          : 0.0;
-                      final pR = total > 0
-                          ? (partnerTotal / total).clamp(0.0, 1.0)
-                          : 0.0;
                       final myI = (_firstName?.isNotEmpty == true)
                           ? _firstName![0].toUpperCase()
                           : '?';
@@ -441,63 +436,38 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                                     CrossAxisAlignment.center,
                                 children: [
                                   // Left — tap to filter by current user
-                                  GestureDetector(
-                                    onTap: () => setState(
-                                        () => _personFilter = 'mine'),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 4, horizontal: 2),
-                                      decoration: BoxDecoration(
-                                        color: _personFilter == 'mine'
-                                            ? Colors.white.withAlpha(30)
-                                            : Colors.transparent,
-                                        borderRadius:
-                                            BorderRadius.circular(8),
-                                        border: _personFilter == 'mine'
-                                            ? const Border(
-                                                bottom: BorderSide(
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () => setState(
+                                          () => _personFilter = 'mine'),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 18,
+                                            backgroundColor:
+                                                AppColors.meColor,
+                                            child: Text(myI,
+                                                style: const TextStyle(
                                                     color: Colors.white,
-                                                    width: 2))
-                                            : null,
-                                      ),
-                                      child: Column(children: [
-                                        CircleAvatar(
-                                          radius: 18,
-                                          backgroundColor:
-                                              AppColors.meColor,
-                                          child: Text(myI,
+                                                    fontWeight:
+                                                        FontWeight.bold)),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(_firstName ?? '',
                                               style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.white)),
+                                          Text(
+                                              '$displayCurrency${formatAmount(myTotal)}',
+                                              style: const TextStyle(
+                                                  fontSize: 16,
                                                   color: Colors.white,
                                                   fontWeight:
                                                       FontWeight.bold)),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(_firstName ?? '',
-                                            style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.white)),
-                                        Text(
-                                            '$displayCurrency${myTotal.toStringAsFixed(2)}',
-                                            style: const TextStyle(
-                                                fontSize: 18,
-                                                color: Colors.white,
-                                                fontWeight:
-                                                    FontWeight.bold)),
-                                        const SizedBox(height: 4),
-                                        SizedBox(
-                                          width: 70,
-                                          child: LinearProgressIndicator(
-                                            value: myR,
-                                            backgroundColor:
-                                                Colors.white.withAlpha(76),
-                                            valueColor:
-                                                const AlwaysStoppedAnimation(
-                                                    Colors.white),
-                                            borderRadius:
-                                                BorderRadius.circular(4),
-                                          ),
-                                        ),
-                                      ]),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                   // Center — tap to show all (default)
@@ -505,111 +475,66 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                                     child: GestureDetector(
                                       onTap: () => setState(
                                           () => _personFilter = 'tous'),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: _personFilter == 'tous'
-                                              ? Colors.white.withAlpha(30)
-                                              : Colors.transparent,
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          border: _personFilter == 'tous'
-                                              ? const Border(
-                                                  bottom: BorderSide(
-                                                      color: Colors.white,
-                                                      width: 2))
-                                              : null,
-                                        ),
-                                        child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              const Text('TOTAL',
-                                                  style: TextStyle(
-                                                      fontSize: 11,
-                                                      color: Colors.white70,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      letterSpacing: 1.2)),
-                                              Text(
-                                                  '$displayCurrency${total.toStringAsFixed(2)}',
-                                                  style: const TextStyle(
-                                                      fontSize: 22,
-                                                      color: Colors.white,
-                                                      fontWeight:
-                                                          FontWeight.bold)),
-                                              Text(l.ensembleLabel,
-                                                  style: const TextStyle(
-                                                      fontSize: 11,
-                                                      color:
-                                                          Colors.white60)),
-                                              const SizedBox(height: 8),
-                                              const Icon(Icons.bar_chart,
-                                                  color: Colors.white60,
-                                                  size: 20),
-                                            ]),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          const Text('TOTAL',
+                                              style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: Colors.white70,
+                                                  fontWeight:
+                                                      FontWeight.bold,
+                                                  letterSpacing: 1.2)),
+                                          Text(
+                                              '$displayCurrency${formatAmount(total)}',
+                                              style: const TextStyle(
+                                                  fontSize: 22,
+                                                  color: Colors.white,
+                                                  fontWeight:
+                                                      FontWeight.bold)),
+                                          Text(l.ensembleLabel,
+                                              style: const TextStyle(
+                                                  fontSize: 11,
+                                                  color: Colors.white60)),
+                                        ],
                                       ),
                                     ),
                                   ),
                                   // Right — tap to filter by partner
-                                  GestureDetector(
-                                    onTap: () => setState(
-                                        () => _personFilter = 'partner'),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 4, horizontal: 2),
-                                      decoration: BoxDecoration(
-                                        color: _personFilter == 'partner'
-                                            ? Colors.white.withAlpha(30)
-                                            : Colors.transparent,
-                                        borderRadius:
-                                            BorderRadius.circular(8),
-                                        border: _personFilter == 'partner'
-                                            ? const Border(
-                                                bottom: BorderSide(
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () => setState(
+                                          () => _personFilter = 'partner'),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 18,
+                                            backgroundColor:
+                                                AppColors.secondary,
+                                            child: Text(pI,
+                                                style: const TextStyle(
                                                     color: Colors.white,
-                                                    width: 2))
-                                            : null,
-                                      ),
-                                      child: Column(children: [
-                                        CircleAvatar(
-                                          radius: 18,
-                                          backgroundColor:
-                                              AppColors.secondary,
-                                          child: Text(pI,
+                                                    fontWeight:
+                                                        FontWeight.bold)),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(_partnerFirstName ?? '',
                                               style: const TextStyle(
-                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                  color:
+                                                      AppColors.secondary)),
+                                          Text(
+                                              '$displayCurrency${formatAmount(partnerTotal)}',
+                                              style: const TextStyle(
+                                                  fontSize: 16,
+                                                  color: AppColors.secondary,
                                                   fontWeight:
                                                       FontWeight.bold)),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(_partnerFirstName ?? '',
-                                            style: const TextStyle(
-                                                fontSize: 12,
-                                                color: AppColors.secondary)),
-                                        Text(
-                                            '$displayCurrency${partnerTotal.toStringAsFixed(2)}',
-                                            style: const TextStyle(
-                                                fontSize: 18,
-                                                color: AppColors.secondary,
-                                                fontWeight:
-                                                    FontWeight.bold)),
-                                        const SizedBox(height: 4),
-                                        SizedBox(
-                                          width: 70,
-                                          child: LinearProgressIndicator(
-                                            value: pR,
-                                            backgroundColor:
-                                                Colors.white.withAlpha(76),
-                                            valueColor:
-                                                const AlwaysStoppedAnimation(
-                                                    AppColors.secondary),
-                                            borderRadius:
-                                                BorderRadius.circular(4),
-                                          ),
-                                        ),
-                                      ]),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -748,7 +673,7 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                                               CrossAxisAlignment.end,
                                           children: [
                                             Text(
-                                                '$cur${amt.toStringAsFixed(2)}',
+                                                '$cur${formatAmount(amt)}',
                                                 style: TextStyle(
                                                     fontSize: 16,
                                                     fontWeight:
@@ -784,10 +709,13 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                     },
                   ),
           ),
-          // Add button — bottom: 80 matches Pacts screen CTA clearance
+          // Add button
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
-            child: GestureDetector(
+            padding: const EdgeInsets.fromLTRB(0, 4, 0, 68),
+            child: Center(
+              child: FractionallySizedBox(
+                widthFactor: 0.93,
+                child: GestureDetector(
               onTap: _coupleId == null
                   ? null
                   : () => Navigator.push(
@@ -797,8 +725,7 @@ class ExpensesScreenState extends State<ExpensesScreen> {
                         ),
                       ),
               child: Container(
-                width: double.infinity,
-                height: 52,
+                height: 50,
                 decoration: BoxDecoration(
                   gradient: _coupleId == null
                       ? const LinearGradient(
@@ -829,6 +756,8 @@ class ExpensesScreenState extends State<ExpensesScreen> {
               ),
             ),
           ),
+        ),
+      ),
         ],
       ),
     );

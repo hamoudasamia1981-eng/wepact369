@@ -60,11 +60,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
   void _prevMonth() => setState(() {
         _focusedMonth =
             DateTime(_focusedMonth.year, _focusedMonth.month - 1);
+        _selectedDay =
+            DateTime(_focusedMonth.year, _focusedMonth.month, 1);
       });
 
   void _nextMonth() => setState(() {
         _focusedMonth =
             DateTime(_focusedMonth.year, _focusedMonth.month + 1);
+        _selectedDay =
+            DateTime(_focusedMonth.year, _focusedMonth.month, 1);
       });
 
   List<int?> _buildDays() {

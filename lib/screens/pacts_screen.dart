@@ -489,28 +489,33 @@ class PactsScreenState extends State<PactsScreen>
             ],
           ),
           Positioned(
-            left: 16,
-            right: 16,
-            bottom: 80,
-            child: GestureDetector(
-              onTap: () => _showAddPactSheet(context),
-              child: Container(
-                height: 52,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF7C3AED), Color(0xFFFF8C00)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Center(
-                  child: Text(
-                    '+ Ajouter un pacte',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16),
+            left: 0,
+            right: 0,
+            bottom: 68,
+            child: Center(
+              child: FractionallySizedBox(
+                widthFactor: 0.93,
+                child: GestureDetector(
+                  onTap: () => _showAddPactSheet(context),
+                  child: Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF7C3AED), Color(0xFFFF8C00)],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Center(
+                      child: Text(
+                        l.addPactButton,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16),
+                      ),
+                    ),
                   ),
                 ),
               ),
