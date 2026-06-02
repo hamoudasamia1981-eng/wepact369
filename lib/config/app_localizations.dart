@@ -364,6 +364,7 @@ class AppLocalizations {
   String get navExpenses => isFr ? 'Dépenses' : 'Expenses';
   String get navPacts => isFr ? 'Pactes' : 'Pacts';
   String get navCalendar => isFr ? 'Calendrier' : 'Calendar';
+  String get navShopping => isFr ? 'Courses' : 'Shopping';
   String get navProfile => isFr ? 'Profil' : 'Profile';
   String get createWhat =>
       isFr ? 'Que voulez-vous créer ?' : 'What do you want to create?';
@@ -380,6 +381,28 @@ class AppLocalizations {
   // ── SPLASH ──────────────────────────────────────────────────
   String get splashTagline =>
       isFr ? 'La vie à deux, sans friction.' : 'Couple life, without friction.';
+
+  // ── SHOPPING LIST ───────────────────────────────────────────
+  String get shoppingListTitle => isFr ? 'Liste de courses' : 'Shopping List';
+  String get shoppingListEmpty =>
+      isFr ? 'Votre liste est vide. Ajoutez un article.'
+           : 'Your list is empty. Add an item.';
+  String get shoppingItemHint => isFr ? "Nom de l'article" : 'Item name';
+  String get shoppingAddButton => isFr ? 'Ajouter' : 'Add';
+  String get shoppingPurchasedSection => isFr ? 'Acheté' : 'Purchased';
+  String get shoppingActiveSection => isFr ? 'À acheter' : 'To buy';
+  String get shoppingClearPurchased =>
+      isFr ? 'Vider les articles achetés' : 'Clear purchased items';
+  String get shoppingClearConfirmTitle =>
+      isFr ? 'Vider les articles achetés ?' : 'Clear purchased items?';
+  String get shoppingClearConfirmBody =>
+      isFr ? 'Tous les articles achetés seront supprimés définitivement.'
+           : 'All purchased items will be permanently deleted.';
+  String get shoppingNoPartner =>
+      isFr ? 'Liez votre compte à un partenaire pour partager la liste.'
+           : 'Link your account to a partner to share the list.';
+  String get shoppingAddedBy => isFr ? 'Ajouté par :' : 'Added by:';
+  String get shoppingBoughtBy => isFr ? 'Acheté par :' : 'Bought by:';
 }
 
 // ── REUSABLE LANGUAGE TOGGLE BUTTON ────────────────────────────

@@ -11,6 +11,7 @@ import 'expenses_screen.dart';
 import 'home_screen.dart';
 import 'pacts_screen.dart';
 import 'profile_screen.dart';
+import 'shopping_list_screen.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -39,6 +40,7 @@ class _MainNavigationState extends State<MainNavigation> {
       ExpensesScreen(key: _expensesKey),
       PactsScreen(key: _pactsKey),
       const CalendarScreen(),
+      const ShoppingListScreen(),
       const ProfileScreen(),
     ];
   }
@@ -164,6 +166,11 @@ class _MainNavigationState extends State<MainNavigation> {
         icon: const Icon(Icons.calendar_today_outlined),
         activeIcon: const Icon(Icons.calendar_today),
         label: l.navCalendar,
+      ),
+      BottomNavigationBarItem(
+        icon: const Icon(Icons.shopping_cart_outlined),
+        activeIcon: const Icon(Icons.shopping_cart),
+        label: l.navShopping,
       ),
       BottomNavigationBarItem(
         icon: const Icon(Icons.person_outline),
