@@ -15,10 +15,7 @@ class AddTaskScreen extends StatefulWidget {
 class _AddTaskScreenState extends State<AddTaskScreen> {
   static const _categories = <String, String>{
     'Maison': '🏠',
-    'Courses': '🛒',
     'Enfants': '👶',
-    'Loisirs': '🎭',
-    'Santé': '💊',
     'Autre': '💳',
   };
 

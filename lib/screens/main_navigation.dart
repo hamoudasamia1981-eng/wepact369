@@ -5,6 +5,7 @@ import '../providers/language_provider.dart';
 import '../theme/app_colors.dart';
 import 'add_expense_screen.dart';
 import 'add_initiative_screen.dart';
+import 'add_shopping_item_screen.dart';
 import 'add_task_screen.dart';
 import 'calendar_screen.dart';
 import 'expenses_screen.dart';
@@ -133,6 +134,21 @@ class _MainNavigationState extends State<MainNavigation> {
                 Navigator.push(context,
                     MaterialPageRoute(
                         builder: (_) => const AddInitiativeScreen()));
+              },
+            ),
+            const SizedBox(height: 12),
+            _SheetCard(
+              color: const Color(0xFFD1FAE5),
+              borderColor: AppColors.success,
+              icon: Icons.shopping_cart_outlined,
+              iconColor: AppColors.success,
+              title: l.createToBuyLabel,
+              subtitle: l.createToBuySubtitle,
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(context,
+                    MaterialPageRoute(
+                        builder: (_) => const AddShoppingItemScreen()));
               },
             ),
             const SizedBox(height: 16),

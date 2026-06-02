@@ -165,9 +165,13 @@ class AppLocalizations {
       isFr ? 'Inviter mon partenaire' : 'Invite my partner';
   String get cancelInviteButton =>
       isFr ? "Annuler l'invitation" : 'Cancel invitation';
-  String get skipForNow => isFr ? "Passer pour l'instant" : 'Skip for now';
   String get inviteSent =>
       isFr ? 'Invitation envoyée avec succès !' : 'Invitation sent!';
+  String get invitePendingTitle =>
+      isFr ? 'Invitation envoyée' : 'Invitation sent';
+  String get invitePendingSubtitle => isFr
+      ? 'En attente de la réponse de votre partenaire...'
+      : 'Waiting for your partner to accept...';
   String get enterPartnerEmail =>
       isFr ? 'Veuillez saisir un email.' : 'Please enter an email.';
 
@@ -273,7 +277,7 @@ class AppLocalizations {
   String get newTaskTitle => isFr ? 'Nouvelle tâche' : 'New task';
   String get taskTitleLabel => isFr ? 'Titre de la tâche' : 'Task title';
   String get taskHint =>
-      isFr ? 'ex. Faire les courses' : 'e.g. Go shopping';
+      isFr ? 'ex. Réserver restaurant' : 'e.g. Book restaurant';
   String get descriptionLabel =>
       isFr ? 'Description (optionnel)' : 'Description (optional)';
   String get descriptionHint =>
@@ -282,15 +286,17 @@ class AppLocalizations {
   String get proposeTaskButton =>
       isFr ? 'Proposer la tâche' : 'Propose task';
 
-  String taskCategoryLabel(String key) =>
-      isFr ? key : const {
-        'Maison': 'Home',
-        'Courses': 'Shopping',
-        'Enfants': 'Kids',
-        'Loisirs': 'Leisure',
-        'Santé': 'Health',
-        'Autre': 'Other',
-      }[key] ?? key;
+  String taskCategoryLabel(String key) => isFr
+      ? const {
+          'Maison': 'Maison',
+          'Enfants': 'Enfants',
+          'Autre': 'Autres',
+        }[key] ?? key
+      : const {
+          'Maison': 'Home',
+          'Enfants': 'Kids',
+          'Autre': 'Other',
+        }[key] ?? key;
 
   // Add Initiative
   String get newInitiativeTitle =>
@@ -364,7 +370,7 @@ class AppLocalizations {
   String get navExpenses => isFr ? 'Dépenses' : 'Expenses';
   String get navPacts => isFr ? 'Pactes' : 'Pacts';
   String get navCalendar => isFr ? 'Calendrier' : 'Calendar';
-  String get navShopping => isFr ? 'Courses' : 'Shopping';
+  String get navShopping => isFr ? 'À acheter' : 'To Buy';
   String get navProfile => isFr ? 'Profil' : 'Profile';
   String get createWhat =>
       isFr ? 'Que voulez-vous créer ?' : 'What do you want to create?';
@@ -377,20 +383,36 @@ class AppLocalizations {
   String get createInitiativeLabel => isFr ? 'Initiative' : 'Initiative';
   String get createInitiativeSubtitle =>
       isFr ? 'Une idée à partager' : 'An idea to share';
+  String get createToBuyLabel => isFr ? 'À acheter' : 'To Buy';
+  String get createToBuySubtitle =>
+      isFr ? 'Ajouter un produit à acheter' : 'Add an item to buy';
 
   // ── SPLASH ──────────────────────────────────────────────────
   String get splashTagline =>
       isFr ? 'La vie à deux, sans friction.' : 'Couple life, without friction.';
 
   // ── SHOPPING LIST ───────────────────────────────────────────
-  String get shoppingListTitle => isFr ? 'Liste de courses' : 'Shopping List';
+  String get shoppingListTitle => isFr ? 'À acheter' : 'To Buy';
   String get shoppingListEmpty =>
       isFr ? 'Votre liste est vide. Ajoutez un article.'
            : 'Your list is empty. Add an item.';
   String get shoppingItemHint => isFr ? "Nom de l'article" : 'Item name';
   String get shoppingAddButton => isFr ? 'Ajouter' : 'Add';
   String get shoppingPurchasedSection => isFr ? 'Acheté' : 'Purchased';
-  String get shoppingActiveSection => isFr ? 'À acheter' : 'To buy';
+  String get shoppingActiveSection => isFr ? 'À acheter' : 'To Buy';
+  String get shoppingActivityAdded =>
+      isFr ? 'Article à acheter' : 'Item to buy';
+  String get shoppingActivityBought =>
+      isFr ? 'Article acheté' : 'Item purchased';
+  String shoppingGroupAdded(int n) => isFr
+      ? '$n articles à acheter'
+      : '$n items to buy';
+  String shoppingGroupBought(int n) => isFr
+      ? '$n articles achetés'
+      : '$n items purchased';
+  String shoppingBannerText(int n) => isFr
+      ? '$n ${n > 1 ? 'articles' : 'article'} à acheter'
+      : '$n ${n > 1 ? 'items' : 'item'} to buy';
   String get shoppingClearPurchased =>
       isFr ? 'Vider les articles achetés' : 'Clear purchased items';
   String get shoppingClearConfirmTitle =>

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/app_localizations.dart';
 import '../providers/language_provider.dart';
+import '../services/shopping_service.dart';
 import '../theme/app_colors.dart';
 
 class ShoppingListScreen extends StatefulWidget {
@@ -84,30 +85,24 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     final name = _itemController.text.trim();
     if (name.isEmpty || _coupleId == null || _currentUid == null) return;
     setState(() => _isSaving = true);
-    try {
-      await _db.collection('shopping_items').add({
-        'name': name,
-        'createdByRef': _currentUid,
-        'coupleRef': _coupleId,
-        'createdAt': FieldValue.serverTimestamp(),
-        'isCompleted': false,
-        'completedByRef': null,
-        'completedAt': null,
-      });
+    final error = await ShoppingService.addItem(
+      name: name,
+      createdByRef: _currentUid!,
+      coupleRef: _coupleId!,
+    );
+    if (!mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).saveError),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    } else {
       _itemController.clear();
       _focusNode.requestFocus();
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).saveError),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
     }
+    setState(() => _isSaving = false);
   }
 
   Future<void> _toggleItem(String docId, bool currentlyCompleted) async {
@@ -165,6 +160,14 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
         : (_partnerFirstName ?? '');
   }
 
+  // Orange for current user, blue for partner — applied to "Added by" only.
+  Color _addedByColor(String? uid) {
+    if (uid == null) return AppColors.textGrey;
+    return uid == _currentUid
+        ? AppColors.secondary   // orange #FF8C00
+        : AppColors.meColor;    // blue  #3B82F6
+  }
+
   // ── Build ─────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -197,7 +200,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
             fontSize: 20,
           ),
         ),
-        actions: const [SizedBox(width: 8)],
+        actions: const [LangToggleButton(dark: false), SizedBox(width: 8)],
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -519,8 +522,15 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(
                   '$subtitlePrefix $subtitleName',
-                  style: const TextStyle(
-                      color: AppColors.textGrey, fontSize: 11),
+                  style: TextStyle(
+                    color: isCompleted
+                        ? AppColors.textGrey
+                        : _addedByColor(createdBy),
+                    fontSize: 11,
+                    fontWeight: isCompleted
+                        ? FontWeight.w400
+                        : FontWeight.w500,
+                  ),
                 ),
               )
             : null,

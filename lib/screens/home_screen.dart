@@ -9,7 +9,7 @@ import '../providers/settings_provider.dart';
 import '../theme/app_colors.dart';
 
 class _ActivityItem {
-  final String type; // 'pact' or 'expense'
+  final String type; // 'pact', 'expense', or 'shopping'
   final String title;
   final String status;
   final String emoji;
@@ -18,6 +18,7 @@ class _ActivityItem {
   final String? expenseCurrency;
   final double? expenseAmount;
   final Timestamp? createdAt;
+  final int shoppingCount; // 0 = individual; >1 = grouped
 
   const _ActivityItem({
     required this.type,
@@ -29,6 +30,7 @@ class _ActivityItem {
     this.expenseCurrency,
     this.expenseAmount,
     this.createdAt,
+    this.shoppingCount = 0,
   });
 }
 
@@ -68,14 +70,17 @@ class _HomeScreenState extends State<HomeScreen> {
   int _proposedCount = 0;
   int _acceptedCount = 0;
   int _pendingForMeCount = 0;
+  int _activeShoppingCount = 0;
 
   bool _isLoading = true;
 
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _pactsSub;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _expensesSub;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _shoppingSub;
 
   List<QueryDocumentSnapshot<Map<String, dynamic>>> _allPacts = [];
   List<QueryDocumentSnapshot<Map<String, dynamic>>> _allExpenses = [];
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> _allShoppingItems = [];
   List<_ActivityItem> _recentActivity = [];
 
   @override
@@ -88,6 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _pactsSub?.cancel();
     _expensesSub?.cancel();
+    _shoppingSub?.cancel();
     super.dispose();
   }
 
@@ -155,6 +161,16 @@ class _HomeScreenState extends State<HomeScreen> {
         _allExpenses = snap.docs;
         _recompute(uid, partnerId);
       });
+
+      _shoppingSub = _db
+          .collection('shopping_items')
+          .where('coupleRef', isEqualTo: coupleId)
+          .snapshots()
+          .listen((snap) {
+        if (!mounted) return;
+        _allShoppingItems = snap.docs;
+        _recompute(uid, partnerId);
+      });
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -214,11 +230,68 @@ class _HomeScreenState extends State<HomeScreen> {
         createdAt: data['createdAt'] as Timestamp?,
       ));
     }
+    // Group shopping items: at most 1 card for active, 1 card for bought
+    final addedDocs = _allShoppingItems
+        .where((d) => (d.data()['isCompleted'] as bool?) != true)
+        .toList()
+      ..sort((a, b) {
+        final ta = (a.data()['createdAt'] as Timestamp?)
+                ?.millisecondsSinceEpoch ??
+            0;
+        final tb = (b.data()['createdAt'] as Timestamp?)
+                ?.millisecondsSinceEpoch ??
+            0;
+        return tb.compareTo(ta);
+      });
+    if (addedDocs.isNotEmpty) {
+      final ld = addedDocs.first.data();
+      items.add(_ActivityItem(
+        type: 'shopping',
+        title: addedDocs.length == 1 ? ((ld['name'] as String?) ?? '') : '',
+        status: 'shopping_added',
+        emoji: '🛒',
+        isInitiative: false,
+        createdByMe: (ld['createdByRef'] as String?) == uid,
+        createdAt: ld['createdAt'] as Timestamp?,
+        shoppingCount: addedDocs.length,
+      ));
+    }
+
+    final boughtDocs = _allShoppingItems
+        .where((d) => (d.data()['isCompleted'] as bool?) == true)
+        .toList()
+      ..sort((a, b) {
+        final ta = (a.data()['completedAt'] as Timestamp?)
+                ?.millisecondsSinceEpoch ??
+            0;
+        final tb = (b.data()['completedAt'] as Timestamp?)
+                ?.millisecondsSinceEpoch ??
+            0;
+        return tb.compareTo(ta);
+      });
+    if (boughtDocs.isNotEmpty) {
+      final ld = boughtDocs.first.data();
+      items.add(_ActivityItem(
+        type: 'shopping',
+        title: boughtDocs.length == 1 ? ((ld['name'] as String?) ?? '') : '',
+        status: 'shopping_bought',
+        emoji: '🛒',
+        isInitiative: false,
+        createdByMe: (ld['completedByRef'] as String?) == uid,
+        createdAt: ld['completedAt'] as Timestamp?,
+        shoppingCount: boughtDocs.length,
+      ));
+    }
+
     items.sort((a, b) {
       final ta = a.createdAt?.millisecondsSinceEpoch ?? 0;
       final tb = b.createdAt?.millisecondsSinceEpoch ?? 0;
       return tb.compareTo(ta);
     });
+
+    final activeShoppingCount = _allShoppingItems
+        .where((d) => (d.data()['isCompleted'] as bool?) != true)
+        .length;
 
     setState(() {
       _myTotal = myTotal;
@@ -226,6 +299,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _proposedCount = proposedCount;
       _acceptedCount = acceptedCount;
       _pendingForMeCount = pendingForMeCount;
+      _activeShoppingCount = activeShoppingCount;
       _recentActivity = items.take(5).toList();
     });
   }
@@ -515,6 +589,39 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
+              // ── SHOPPING BANNER ─────────────────────────────
+              if (_activeShoppingCount > 0)
+                GestureDetector(
+                  onTap: () => widget.onTabChange?.call(4),
+                  child: Container(
+                    margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD1FAE5),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                          color: AppColors.success.withAlpha(120),
+                          width: 1),
+                    ),
+                    child: Row(children: [
+                      const Text('🛒', style: TextStyle(fontSize: 18)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          l.shoppingBannerText(_activeShoppingCount),
+                          style: const TextStyle(
+                              fontSize: 13,
+                              color: AppColors.success,
+                              fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right,
+                          color: AppColors.success, size: 20),
+                    ]),
+                  ),
+                ),
+
               // ── EXPENSES CARD ────────────────────────────────
               Container(
                 margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -734,25 +841,44 @@ class _HomeScreenState extends State<HomeScreen> {
                       ...(_recentActivity.map((item) {
                         final emojiBgColor = item.type == 'expense'
                             ? const Color(0xFFF3F4F6)
-                            : (item.isInitiative
-                                ? AppColors.orangeLight
-                                : AppColors.purpleLight);
+                            : item.type == 'shopping'
+                                ? const Color(0xFFD1FAE5)
+                                : (item.isInitiative
+                                    ? AppColors.orangeLight
+                                    : AppColors.purpleLight);
+                        final displayTitle = item.type == 'shopping'
+                            ? (item.shoppingCount > 1
+                                ? (item.status == 'shopping_bought'
+                                    ? l.shoppingGroupBought(item.shoppingCount)
+                                    : l.shoppingGroupAdded(item.shoppingCount))
+                                : '${item.status == 'shopping_bought' ? l.shoppingActivityBought : l.shoppingActivityAdded} : ${item.title}')
+                            : item.title;
                         final subtitle = item.type == 'pact'
                             ? l.proposedBy(item.createdByMe
                                 ? l.youLabel
                                 : (_partnerFirstName ?? l.partnerLabel))
-                            : '${item.createdByMe ? (_firstName ?? '') : (_partnerFirstName ?? '')} • ${item.expenseCurrency ?? currency}${item.expenseAmount != null ? formatAmount(item.expenseAmount!) : ''}';
+                            : item.type == 'shopping'
+                                ? (item.createdByMe
+                                    ? (_firstName ?? l.youLabel)
+                                    : (_partnerFirstName ?? l.partnerLabel))
+                                : '${item.createdByMe ? (_firstName ?? '') : (_partnerFirstName ?? '')} • ${item.expenseCurrency ?? currency}${item.expenseAmount != null ? formatAmount(item.expenseAmount!) : ''}';
                         final subtitleColor = item.type == 'pact'
                             ? (item.createdByMe
                                 ? AppColors.meColor
                                 : AppColors.partnerColor)
-                            : AppColors.primary;
+                            : item.type == 'shopping'
+                                ? (item.createdByMe
+                                    ? AppColors.secondary
+                                    : AppColors.meColor)
+                                : AppColors.primary;
                         return GestureDetector(
                           onTap: item.type == 'pact'
                               ? () => item.status == 'pending'
                                   ? widget.onNavigateToPacts?.call(1)
                                   : widget.onTabChange?.call(2)
-                              : null,
+                              : item.type == 'shopping'
+                                  ? () => widget.onTabChange?.call(4)
+                                  : null,
                           child: Container(
                             margin: const EdgeInsets.only(bottom: 8),
                             padding: const EdgeInsets.all(12),
@@ -785,7 +911,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   crossAxisAlignment:
                                       CrossAxisAlignment.start,
                                   children: [
-                                    Text(item.title,
+                                    Text(displayTitle,
                                         style: const TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.bold,
