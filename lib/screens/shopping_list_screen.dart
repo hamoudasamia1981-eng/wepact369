@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/app_localizations.dart';
@@ -186,6 +187,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
         automaticallyImplyLeading: false,
         backgroundColor: AppColors.white,
         elevation: 0,
+        toolbarHeight: 48,
         centerTitle: false,
         title: Text(
           l.shoppingListTitle,
@@ -211,8 +213,20 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
   // ── Add bar ───────────────────────────────────────────────────
   Widget _buildAddBar(AppLocalizations l) {
     final canAdd = _coupleId != null && !_isSaving;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+
+    // Desktop/web: stronger contrast so elements don't vanish on white page.
+    // Mobile: keep current values unchanged.
+    final containerBg =
+        kIsWeb ? const Color(0xFFF0F2F5) : AppColors.white;
+    final inputFill =
+        kIsWeb ? const Color(0xFFE8EAED) : const Color(0xFFF3F4F6);
+    final enabledBorderColor =
+        kIsWeb ? const Color(0xFF9CA3AF) : const Color(0xFFD1D5DB);
+    final buttonElevation = kIsWeb ? 1.0 : 0.0;
+
+    return Container(
+      color: containerBg,
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
       child: Row(
         children: [
           Expanded(
@@ -220,41 +234,42 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
               controller: _itemController,
               focusNode: _focusNode,
               enabled: _coupleId != null,
-              style:
-                  const TextStyle(color: AppColors.textDark, fontSize: 15),
+              style: const TextStyle(
+                  color: AppColors.textDark, fontSize: 15),
               decoration: InputDecoration(
                 hintText: l.shoppingItemHint,
                 hintStyle: const TextStyle(
-                    color: AppColors.textGrey, fontSize: 15),
+                    color: AppColors.textGrey, fontSize: 14),
                 filled: true,
-                fillColor: const Color(0xFFF9FAFB),
+                fillColor: inputFill,
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 12),
+                    horizontal: 14, vertical: 10),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                      color: enabledBorderColor, width: 1.5),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      const BorderSide(color: Color(0xFFE5E7EB), width: 1),
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                      color: enabledBorderColor, width: 1.5),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                   borderSide: const BorderSide(
-                      color: AppColors.primary, width: 1.5),
+                      color: AppColors.primary, width: 2),
                 ),
                 disabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      const BorderSide(color: Color(0xFFE5E7EB), width: 1),
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(
+                      color: Color(0xFFE5E7EB), width: 1),
                 ),
               ),
               textInputAction: TextInputAction.done,
               onSubmitted: (_) => _addItem(),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           ElevatedButton(
             onPressed: canAdd ? _addItem : null,
             style: ElevatedButton.styleFrom(
@@ -263,11 +278,11 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                   AppColors.primary.withAlpha(100),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              minimumSize: const Size(0, 48),
+                  borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              minimumSize: const Size(76, 46),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              elevation: 0,
+              elevation: buttonElevation,
             ),
             child: _isSaving
                 ? const SizedBox(
