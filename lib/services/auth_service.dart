@@ -16,8 +16,15 @@ class AuthService {
 
   Future<UserCredential?> signInWithGoogle() async {
     if (kIsWeb) {
-      await _auth.signInWithRedirect(GoogleAuthProvider());
-      return null; // page navigates away; result handled by getRedirectResult() in main()
+      try {
+        return await _auth.signInWithPopup(GoogleAuthProvider());
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'popup-blocked' || e.code == 'web-storage-unsupported') {
+          await _auth.signInWithRedirect(GoogleAuthProvider());
+          return null;
+        }
+        rethrow;
+      }
     }
     final googleUser = await GoogleSignIn().signIn();
     if (googleUser == null) return null;

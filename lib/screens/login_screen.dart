@@ -22,6 +22,12 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+    debugPrint('[DEBUG] LoginScreen: mounted (currentUser=${FirebaseAuth.instance.currentUser?.uid ?? 'null'})');
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
@@ -91,9 +97,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _signInWithGoogle() async {
+    debugPrint('[DEBUG] login: _signInWithGoogle() called');
     setState(() => _isLoading = true);
     try {
       final cred = await _authService.signInWithGoogle();
+      debugPrint('[DEBUG] login: signInWithGoogle() returned cred=${cred?.user?.uid ?? 'null'}');
       if (!mounted) return;
       if (cred == null) return;
       await _navigateAfterLogin(cred.user!.uid);

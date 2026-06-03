@@ -23,7 +23,14 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _navigate() async {
     if (!mounted) return;
-    final user = await FirebaseAuth.instance.authStateChanges().first;
+    // currentUser covers the Google redirect case where Firebase Auth has
+    // already restored the session before authStateChanges fires.
+    final syncUser = FirebaseAuth.instance.currentUser;
+    debugPrint('[DEBUG] splash: currentUser (sync) = ${syncUser?.uid ?? 'null'} / ${syncUser?.email ?? 'null'}');
+
+    final user = syncUser ??
+        await FirebaseAuth.instance.authStateChanges().first;
+    debugPrint('[DEBUG] splash: user after authStateChanges = ${user?.uid ?? 'null'} / ${user?.email ?? 'null'}');
     if (!mounted) return;
 
     if (user != null) {
@@ -34,18 +41,39 @@ class _SplashScreenState extends State<SplashScreen> {
       );
       if (!mounted) return;
 
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
+      final docRef =
+          FirebaseFirestore.instance.collection('users').doc(user.uid);
+      debugPrint('[DEBUG] splash: fetching Firestore doc for uid=${user.uid}');
+      final doc = await docRef.get();
+      debugPrint('[DEBUG] splash: doc.exists=${doc.exists}');
       if (!mounted) return;
 
+      if (!doc.exists) {
+        final parts = (user.displayName ?? '').split(' ');
+        await docRef.set({
+          'firstName': parts.isNotEmpty ? parts.first : '',
+          'lastName': parts.length > 1 ? parts.skip(1).join(' ') : '',
+          'email': user.email ?? '',
+          'gender': '',
+          'currency': '£',
+          'partnerId': null,
+          'partnerEmail': null,
+          'partnerSince': null,
+          'createdAt': FieldValue.serverTimestamp(),
+          'photoURL': user.photoURL,
+        });
+        debugPrint('[DEBUG] splash: created Firestore doc → navigating to /invite-partner');
+        if (!mounted) return;
+        Navigator.pushReplacementNamed(context, '/invite-partner');
+        return;
+      }
+
       final partnerId = doc.data()?['partnerId'];
-      Navigator.pushReplacementNamed(
-        context,
-        partnerId != null ? '/home' : '/invite-partner',
-      );
+      final destination = partnerId != null ? '/home' : '/invite-partner';
+      debugPrint('[DEBUG] splash: partnerId=$partnerId → navigating to $destination');
+      Navigator.pushReplacementNamed(context, destination);
     } else {
+      debugPrint('[DEBUG] splash: user is null → navigating to /login');
       Navigator.pushReplacementNamed(context, '/login');
     }
   }

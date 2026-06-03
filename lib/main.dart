@@ -23,8 +23,13 @@ void main() async {
   );
   if (kIsWeb) {
     try {
-      await FirebaseAuth.instance.getRedirectResult();
-    } catch (_) {}
+      debugPrint('[DEBUG] main: calling getRedirectResult()');
+      final result = await FirebaseAuth.instance.getRedirectResult();
+      debugPrint('[DEBUG] main: getRedirectResult() user=${result.user?.uid ?? 'null'} email=${result.user?.email ?? 'null'}');
+    } catch (e) {
+      debugPrint('[DEBUG] main: getRedirectResult() threw: $e');
+    }
+    debugPrint('[DEBUG] main: currentUser after getRedirectResult = ${FirebaseAuth.instance.currentUser?.uid ?? 'null'} / ${FirebaseAuth.instance.currentUser?.email ?? 'null'}');
   }
   final prefs = await SharedPreferences.getInstance();
   final savedLang = prefs.getString('language') ?? 'fr';

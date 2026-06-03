@@ -84,6 +84,27 @@ class _SignupScreenState extends State<SignupScreen> {
         'photoURL': null,
       });
 
+      try {
+        await FirebaseAuth.instance.currentUser?.sendEmailVerification();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+            'Account created successfully 💜\nPlease check your email and verify your account.'),
+          backgroundColor: AppColors.primary,
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 5),
+        ));
+      } catch (_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+            'Account created, but verification email could not be sent. Please try again later.'),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 5),
+        ));
+      }
+
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/invite-partner');
     } on FirebaseAuthException catch (e) {
