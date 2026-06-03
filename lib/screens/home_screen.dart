@@ -66,8 +66,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _partnerId;
   String _currency = '£';
 
-  double _myTotal = 0;
-  double _partnerTotal = 0;
+  double _myMonthTotal = 0;
+  double _partnerMonthTotal = 0;
   int _proposedCount = 0;
   int _acceptedCount = 0;
   int _pendingForMeCount = 0;
@@ -178,20 +178,27 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _recompute(String uid, String partnerId) {
-    double myTotal = 0, partnerTotal = 0;
+    final now = DateTime.now();
+    final monthStart = DateTime(now.year, now.month);
+    final monthEnd = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+
+    double myMonthTotal = 0, partnerMonthTotal = 0;
     for (final doc in _allExpenses) {
-      final amount = (doc.data()['amount'] as num?)?.toDouble() ?? 0;
-      if (doc.data()['createdBy'] == uid) {
-        myTotal += amount;
+      final data = doc.data();
+      final amount = (data['amount'] as num?)?.toDouble() ?? 0;
+      final ts = data['date'] as Timestamp?;
+      final inMonth = ts != null &&
+          !ts.toDate().isBefore(monthStart) &&
+          !ts.toDate().isAfter(monthEnd);
+      if (data['createdBy'] == uid) {
+        if (inMonth) myMonthTotal += amount;
       } else {
-        partnerTotal += amount;
+        if (inMonth) partnerMonthTotal += amount;
       }
     }
 
     final proposedCount = _allPacts
-        .where((d) =>
-            d.data()['status'] == 'pending' &&
-            d.data()['createdBy'] == uid)
+        .where((d) => d.data()['status'] == 'pending')
         .length;
     final acceptedCount =
         _allPacts.where((d) => d.data()['status'] == 'accepted').length;
@@ -295,8 +302,8 @@ class _HomeScreenState extends State<HomeScreen> {
         .length;
 
     setState(() {
-      _myTotal = myTotal;
-      _partnerTotal = partnerTotal;
+      _myMonthTotal = myMonthTotal;
+      _partnerMonthTotal = partnerMonthTotal;
       _proposedCount = proposedCount;
       _acceptedCount = acceptedCount;
       _pendingForMeCount = pendingForMeCount;
@@ -463,9 +470,8 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    final totalAmount = _myTotal + _partnerTotal;
+    final totalAmount = _myMonthTotal + _partnerMonthTotal;
     final currency = context.watch<SettingsProvider>().currency;
-    final currentMonth = l.monthsFull[DateTime.now().month - 1];
     final myInitial = (_firstName?.isNotEmpty == true)
         ? _firstName![0].toUpperCase()
         : '?';
@@ -670,7 +676,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             FittedBox(
                               fit: BoxFit.scaleDown,
                               child: Text(
-                                '$currency${formatAmount(_myTotal)}',
+                                '$currency${formatAmount(_myMonthTotal)}',
                                 style: const TextStyle(
                                     fontSize: 17,
                                     color: Colors.white,
@@ -709,7 +715,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             const SizedBox(height: 6),
-                            Text(l.thisMonth,
+                            Text(l.isFr ? 'Ce mois-ci' : 'This month',
                                 style: TextStyle(
                                     fontSize: 11,
                                     color: Colors.white.withAlpha(217))),
@@ -749,7 +755,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             FittedBox(
                               fit: BoxFit.scaleDown,
                               child: Text(
-                                '$currency${formatAmount(_partnerTotal)}',
+                                '$currency${formatAmount(_partnerMonthTotal)}',
                                 style: TextStyle(
                                     fontSize: 17,
                                     color: Colors.white.withAlpha(217),
@@ -794,13 +800,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     child: GestureDetector(
                       onTap: () =>
-                          widget.onNavigateToExpenses?.call('Mois'),
+                          widget.onNavigateToExpenses?.call('Année'),
                       child: _buildStatCard(
                         iconBgColor: AppColors.purpleLight,
                         icon: Icons.calendar_today,
                         iconColor: AppColors.primary,
-                        value: currentMonth,
-                        label: l.thisMonth,
+                        value: DateTime.now().year.toString(),
+                        label: l.isFr ? 'Cette année' : 'This year',
                       ),
                     ),
                   ),
