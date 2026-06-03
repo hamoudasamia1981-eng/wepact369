@@ -18,18 +18,20 @@ import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   if (kIsWeb) {
     try {
       debugPrint('[DEBUG] main: calling getRedirectResult()');
       final result = await FirebaseAuth.instance.getRedirectResult();
-      debugPrint('[DEBUG] main: getRedirectResult() user=${result.user?.uid ?? 'null'} email=${result.user?.email ?? 'null'}');
+      debugPrint(
+        '[DEBUG] main: getRedirectResult() user=${result.user?.uid ?? 'null'} email=${result.user?.email ?? 'null'}',
+      );
     } catch (e) {
       debugPrint('[DEBUG] main: getRedirectResult() threw: $e');
     }
-    debugPrint('[DEBUG] main: currentUser after getRedirectResult = ${FirebaseAuth.instance.currentUser?.uid ?? 'null'} / ${FirebaseAuth.instance.currentUser?.email ?? 'null'}');
+    debugPrint(
+      '[DEBUG] main: currentUser after getRedirectResult = ${FirebaseAuth.instance.currentUser?.uid ?? 'null'} / ${FirebaseAuth.instance.currentUser?.email ?? 'null'}',
+    );
   }
   final prefs = await SharedPreferences.getInstance();
   final savedLang = prefs.getString('language') ?? 'fr';
@@ -41,10 +43,8 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AppAuthProvider()),
         ChangeNotifierProvider(create: (_) => LanguageProvider(savedLang)),
         ChangeNotifierProvider(
-          create: (_) => SettingsProvider(
-            isDark: savedDark,
-            currency: savedCurrency,
-          ),
+          create: (_) =>
+              SettingsProvider(isDark: savedDark, currency: savedCurrency),
         ),
       ],
       child: const WePact369App(),
