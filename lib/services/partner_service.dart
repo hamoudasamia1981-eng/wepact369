@@ -6,6 +6,7 @@ class PartnerService {
   final _db = FirebaseFirestore.instance;
 
   Future<String?> sendInvitation(String currentUid, String toEmail) async {
+    toEmail = toEmail.trim().toLowerCase();
     final currentDoc = await _db.collection('users').doc(currentUid).get();
     final currentData = currentDoc.data();
     if (currentData == null) {
@@ -84,7 +85,7 @@ class PartnerService {
   ) async {
     final query = await _db
         .collection('invitations')
-        .where('toEmail', isEqualTo: currentEmail)
+        .where('toEmail', isEqualTo: currentEmail.trim().toLowerCase())
         .where('status', isEqualTo: 'pending')
         .limit(1)
         .get();

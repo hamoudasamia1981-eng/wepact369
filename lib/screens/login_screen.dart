@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../config/app_localizations.dart';
 import '../providers/language_provider.dart';
 import '../services/auth_service.dart';
+import '../services/partner_service.dart';
 import '../theme/app_colors.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -61,10 +62,17 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     final partnerId = doc.data()?['partnerId'];
-    Navigator.pushReplacementNamed(
-      context,
-      partnerId != null ? '/home' : '/invite-partner',
-    );
+    if (partnerId != null) {
+      Navigator.pushReplacementNamed(context, '/home');
+      return;
+    }
+
+    // Check for a pending received invitation before going to /invite-partner
+    final email = FirebaseAuth.instance.currentUser?.email ?? '';
+    await PartnerService().checkAndShowPendingInvitation(context, uid, email);
+    if (!mounted) return; // invitation accepted → already navigated to /home
+
+    Navigator.pushReplacementNamed(context, '/invite-partner');
   }
 
   void _showError(String message) {
