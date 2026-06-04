@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../config/app_localizations.dart';
+import '../providers/language_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/theme_ext.dart';
 import 'add_initiative_screen.dart';
@@ -166,6 +168,7 @@ class PactsScreenState extends State<PactsScreen>
   }
 
   void _showAddPactSheet(BuildContext context) {
+    final l = context.read<LanguageProvider>().l10n;
     showModalBottomSheet(
       context: context,
       backgroundColor: context.colorCard,
@@ -191,8 +194,8 @@ class PactsScreenState extends State<PactsScreen>
             ListTile(
               leading: const Text('📋',
                   style: TextStyle(fontSize: 28)),
-              title: const Text('Tâche',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              title: Text(l.createTaskLabel,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
@@ -205,8 +208,8 @@ class PactsScreenState extends State<PactsScreen>
             ListTile(
               leading: const Text('🌟',
                   style: TextStyle(fontSize: 28)),
-              title: const Text('Initiative',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              title: Text(l.createPactLabel,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(

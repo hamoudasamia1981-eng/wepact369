@@ -378,6 +378,7 @@ class AppLocalizations {
   String get createExpenseSubtitle =>
       isFr ? 'Ajouter une dépense partagée' : 'Add a shared expense';
   String get createTaskLabel => isFr ? 'Tâche' : 'Task';
+  String get createPactLabel => 'Initiative';
   String get createTaskSubtitle =>
       isFr ? 'À organiser ou à faire' : 'To organize or do';
   String get createInitiativeLabel => isFr ? 'Initiative' : 'Initiative';
