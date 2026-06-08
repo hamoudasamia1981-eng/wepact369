@@ -365,10 +365,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             fontSize: 15, color: context.colorText)),
                     trailing: Icon(Icons.chevron_right,
                         color: context.colorTextMuted),
-                    onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const SettingsScreen())),
+                    onTap: () async {
+                      await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const SettingsScreen()));
+                      if (mounted) _loadData();
+                    },
                   ),
                   const Divider(height: 1, indent: 16),
                   ListTile(
