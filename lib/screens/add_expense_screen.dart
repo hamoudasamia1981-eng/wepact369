@@ -105,6 +105,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
     setState(() => _isLoading = true);
     try {
+      // TODO: log AnalyticsService.instance.logFirstExpenseCreated(coupleId: _coupleId)
+      //       only if this is the first expense for this couple (check count before adding)
       await FirebaseFirestore.instance.collection('expenses').add({
         'coupleId': _coupleId,
         'createdBy': uid,

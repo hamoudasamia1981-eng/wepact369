@@ -60,6 +60,8 @@ class _AddShoppingItemScreenState extends State<AddShoppingItemScreen> {
     final name = _nameController.text.trim();
     if (name.isEmpty || _coupleId == null || _currentUid == null) return;
     setState(() => _isLoading = true);
+    // TODO: log AnalyticsService.instance.logFirstToBuyAdded(coupleId: _coupleId)
+    //       only if this is the first shopping item for this couple (check count before adding)
     final error = await ShoppingService.addItem(
       name: name,
       createdByRef: _currentUid!,

@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -19,6 +21,9 @@ import 'theme/app_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  if (!kIsWeb) {
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+  }
   if (kIsWeb) {
     try {
       debugPrint('[DEBUG] main: calling getRedirectResult()');
@@ -37,19 +42,25 @@ void main() async {
   final savedLang = prefs.getString('language') ?? 'fr';
   final savedDark = prefs.getBool('darkMode') ?? false;
   final savedCurrency = prefs.getString('currency') ?? '£';
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AppAuthProvider()),
-        ChangeNotifierProvider(create: (_) => LanguageProvider(savedLang)),
-        ChangeNotifierProvider(
-          create: (_) =>
-              SettingsProvider(isDark: savedDark, currency: savedCurrency),
-        ),
-      ],
-      child: const WePact369App(),
-    ),
+  final app = MultiProvider(
+    providers: [
+      ChangeNotifierProvider(create: (_) => AppAuthProvider()),
+      ChangeNotifierProvider(create: (_) => LanguageProvider(savedLang)),
+      ChangeNotifierProvider(
+        create: (_) =>
+            SettingsProvider(isDark: savedDark, currency: savedCurrency),
+      ),
+    ],
+    child: const WePact369App(),
   );
+  if (kIsWeb) {
+    runApp(app);
+  } else {
+    runZonedGuarded(
+      () => runApp(app),
+      (e, s) => FirebaseCrashlytics.instance.recordError(e, s, fatal: true),
+    );
+  }
 }
 
 class WePact369App extends StatelessWidget {

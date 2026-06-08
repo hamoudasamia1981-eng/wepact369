@@ -102,6 +102,8 @@ class _AddInitiativeScreenState extends State<AddInitiativeScreen> {
         dueTs = Timestamp.fromDate(combined);
       }
 
+      // TODO: log AnalyticsService.instance.logFirstInitiativeCreated(coupleId: ids.join('_'))
+      //       only if this is the first initiative for this couple (check count before adding)
       await FirebaseFirestore.instance.collection('pacts').add({
         'coupleId': ids.join('_'),
         'createdBy': user.uid,

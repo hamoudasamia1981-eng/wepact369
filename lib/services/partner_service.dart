@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import 'analytics_service.dart';
 
 class PartnerService {
   final _db = FirebaseFirestore.instance;
@@ -141,6 +142,10 @@ class PartnerService {
                 }),
                 invitationDoc.reference.update({'status': 'accepted'}),
               ]);
+
+              final coupleId = ([currentUid, fromUid]..sort()).join('_');
+              AnalyticsService.instance.logInvitationAccepted(coupleId: coupleId);
+              AnalyticsService.instance.logCoupleLinked(coupleId: coupleId);
 
               if (ctx.mounted) Navigator.pop(ctx);
               if (context.mounted) {

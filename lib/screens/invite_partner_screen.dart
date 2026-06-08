@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/app_localizations.dart';
 import '../providers/language_provider.dart';
+import '../services/analytics_service.dart';
 import '../services/partner_service.dart';
 import '../theme/app_colors.dart';
 
@@ -37,6 +38,7 @@ class _InvitePartnerScreenState extends State<InvitePartnerScreen> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService.instance.logInviteScreenViewed();
     _init();
   }
 
@@ -102,11 +104,13 @@ class _InvitePartnerScreenState extends State<InvitePartnerScreen> {
     if (!mounted) return;
     if (error != null) {
       _showSnackBar(error, isError: true);
+      AnalyticsService.instance.logPartnerLinkFailed(reason: error);
     } else {
       setState(() {
         _invitationSent = true;
         _invitedEmail = toEmail;
       });
+      AnalyticsService.instance.logInvitationSent();
       _showSnackBar(l.inviteSent, isError: false);
     }
     setState(() => _isLoading = false);

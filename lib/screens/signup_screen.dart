@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/app_localizations.dart';
 import '../providers/language_provider.dart';
+import '../services/analytics_service.dart';
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
 
@@ -83,6 +84,7 @@ class _SignupScreenState extends State<SignupScreen> {
         'createdAt': FieldValue.serverTimestamp(),
         'photoURL': null,
       });
+      AnalyticsService.instance.logSignupCompleted(method: 'email');
 
       try {
         await FirebaseAuth.instance.currentUser?.sendEmailVerification();
@@ -141,6 +143,7 @@ class _SignupScreenState extends State<SignupScreen> {
           'createdAt': FieldValue.serverTimestamp(),
           'photoURL': user.photoURL,
         });
+        AnalyticsService.instance.logSignupCompleted(method: 'google');
       }
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/invite-partner');
